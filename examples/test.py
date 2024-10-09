@@ -1,22 +1,18 @@
-from antlr4 import *
-from friendlydateparser.antlr.FriendlyDateLexer import FriendlyDateLexer
-from friendlydateparser.antlr.FriendlyDateParser import FriendlyDateParser
+from friendlydateparser import parse_date
 
 def test_parser(input_text):
-    input_stream = InputStream(input_text)
-    lexer = FriendlyDateLexer(input_stream)
-    token_stream = CommonTokenStream(lexer)
-    parser = FriendlyDateParser(token_stream)
-    
-    # Assuming 'dateExpression' is the entry rule in your grammar
-    tree = parser.dateExpression()
-    
-    # Print the parse tree
-    print(tree.toStringTree(recog=parser))
+
+    result = parse_date(input_text)
+    print(f"result: {result}")
+
+    #tree.toStringTree(recog=parser))
 
 if __name__ == "__main__":
     # Test inputs
+
+
     inputs = [
+        "10/1045",
         "last sunday",
         "next monday",
         "next friday",
