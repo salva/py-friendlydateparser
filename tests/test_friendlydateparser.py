@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 now = "2023-10-12"
 inputs = [
-    ("january/1/2017", "2017-01-01", "OK"),
+    ("january/1/2017 00:00", "2017-01-01", "OK"),
     ("february/14/2017", "2017-02-14", "OK"),
     ("march/15/2017", "2017-03-15", "OK"),
     ("april/30/2017", "2017-04-30", "OK"),

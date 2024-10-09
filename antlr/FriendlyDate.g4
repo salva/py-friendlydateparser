@@ -1,12 +1,20 @@
 grammar FriendlyDate;
 
 friendlyDate
-    : dateExpression EOF
+    : dateTime EOF
     ;
 
-dateExpression
-    : dayMonthAndYear
-    | relativeDate
+dateTime
+    : date (AT? time)?
+    ;
+
+time
+    : twoDigitNumber COLON twoDigitNumber (COLON twoDigitNumber)
+    ;
+
+date
+    : dateAbsolute
+    | dateRelative
     ;
 
 // october/3/2017
@@ -23,18 +31,18 @@ dateExpression
 // the third of october
 
 // Relative Dates (e.g., "last Monday", "next Fri")
-relativeDate
+dateRelative
     : (LAST | NEXT | (THIS (COMMING)?) ) dayOfWeek
     ;
 
-dayMonthAndYear
-    : dmyMonthAsName
-    | dmyMonthAsNumber
-    | dmyLongNumber
-    | dmyYearAlone
+dateAbsolute
+    : dateMonthAsName
+    | dateMonthAsNumber
+    | dateLongNumber
+    | dateYearAlone
     ;
 
-dmyMonthAsName
+dateMonthAsName
     : dayAsNumber SEPARATOR? monthAsName (SEPARATOR? yearLong)?
     | monthAsName SEPARATOR dayAsNumber (SEPARATOR yearLong)?
     | yearLong SEPARATOR monthAsName SEPARATOR dayAsNumber
@@ -43,17 +51,17 @@ dmyMonthAsName
     | monthAsName (SEPARATOR? yearLong)?
     ;
 
-dmyMonthAsNumber
+dateMonthAsNumber
     : twoDigitNumber SEPARATOR twoDigitNumber (SEPARATOR yearLong)?
     | yearLong SEPARATOR monthAsNumber SEPARATOR dayAsNumber
     | monthAsNumber SEPARATOR yearLong
     ;
 
-dmyYearAlone
+dateYearAlone
     : yearLong
     ;
 
-dmyLongNumber
+dateLongNumber
     : YEAR_MONTH_DAY
     ;
 
@@ -150,7 +158,10 @@ THE : 'the';
 OF : 'of';
 IN : 'in';
 AT : 'at';
+
 COMMA : ',';
+COLON : ':';
+SEMICOLON : ';';
 
 LAST : 'last';
 NEXT : 'next'; 

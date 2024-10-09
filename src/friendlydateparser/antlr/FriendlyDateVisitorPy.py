@@ -40,7 +40,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
     @trace
     def make_date(self, ctx):
         try:
-            day, month, year = self.visit(ctx)
+            year, month, day, hour, minute, second = self.visit(ctx)
         except Exception as e:
             logging.exception(e)
             raise Exception(f"Error parsing date: {ctx.toStringTree(recog=ctx.parser)}") from e
@@ -52,14 +52,37 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         if year is None:
             year = self._now.year
 
-        return datetime(year, month, day)
+        if hour is None:
+            hour = 0
+        if minute is None:
+            minute = 0
+        if second is None:
+            second = 0
+
+        return datetime(year, month, day, hour, minute, second)
 
     @trace
     def visitFriendlyDate(self, ctx:FriendlyDateParser.FriendlyDateContext):
-        return self.visitDateExpression(ctx.dateExpression())
+        return self.visitDateTime(ctx.dateTime())
 
     @trace
-    def visitDmyMonthAsName(self, ctx:FriendlyDateParser.DmyMonthAsNameContext):
+    def visitDateTime(self, ctx:FriendlyDateParser.DateTimeContext):
+        logging.error("visitDateTime")
+        if (c := ctx.date()):
+            day, month, year = self.visitDate(ctx.date())
+        else:
+            day, month, year = None, None, None
+
+        if (c := ctx.time()):
+            print("time!")
+            hour, minute, second = self.visitTime(ctx.time())
+        else:
+            hour, minute, second = None, None, None
+
+        return (year, month, day, hour, minute, second)
+
+    @trace
+    def visitDateMonthAsName(self, ctx:FriendlyDateParser.DateMonthAsNameContext):
         if (c := ctx.dayAsNumber()):
             day = self.visitDayAsNumber(c)
         elif (c := ctx.dayAsOrdinal()):
@@ -77,7 +100,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return (day, month, year)
 
     @trace
-    def visitDmyMonthAsNumber(self, ctx:FriendlyDateParser.DmyMonthAsNumberContext):
+    def visitDateMonthAsNumber(self, ctx:FriendlyDateParser.DateMonthAsNumberContext):
         if (c := ctx.monthAsNumber()):
             month = self.visitMonthAsNumber(c)
             if (c := ctx.dayAsNumber()):
@@ -96,7 +119,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return (day, month, year)
 
     @trace
-    def visitDmyYearAlone(self, ctx:FriendlyDateParser.DmyYearAloneContext):
+    def visitDateYearAlone(self, ctx:FriendlyDateParser.DateYearAloneContext):
         year = self.visitYearLong(ctx.yearLong())
         return (None, None, year)
 
@@ -121,6 +144,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return int(ctx.FOUR_DIGIT_NUMBER().getText())
 
     @trace
-    def visitRelativeDate(self, ctx:FriendlyDateParser.RelativeDateContext):
+    def visitDateRelative(self, ctx:FriendlyDateParser.DateRelativeContext):
         return (None, None, None) # TODO
 
