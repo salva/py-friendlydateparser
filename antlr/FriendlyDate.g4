@@ -1,5 +1,9 @@
 grammar FriendlyDate;
 
+friendlyDate
+    : dateExpression EOF
+    ;
+
 dateExpression
     : dayMonthAndYear
     | relativeDate
@@ -20,70 +24,45 @@ dateExpression
 
 // Relative Dates (e.g., "last Monday", "next Fri")
 relativeDate
-    : ('last' | 'next' | ('this' ('comming')?) ) dayOfWeek
+    : (LAST | NEXT | (THIS (COMMING)?) ) dayOfWeek
     ;
 
 dayMonthAndYear
-returns [day, month, year, ambiguous]
-    : sd=spokenDate
-        {$day, $month, $year, $ambiguous = $day, $month, $year, False;}
-    | dmyf=dayMonthAndYearFormal
-        {$day, $month, $year, $ambiguous = $dmyf.day, $dmyf.month, $dmyf.year, False;}
-    | dam=dayAndMonth SEPARATOR y=yearLong
-        {$day, $month, $year, $ambiguous = $dam.day, $dam.month, $y.value, $dam.ambiguous;}
-    | dam1=dayAndMonth
-        {$day, $month, $year, $ambiguous = $dam1.day, $dam1.month, None, $dam1.ambiguous;}
-    | mbn=monthByName
-        {$day, $month, $year, $ambiguous = None, $mbn.value, None, False;}
+    : dmyMonthAsName
+    | dmyMonthAsNumber
+    | dmyLongNumber
+    | dmyYearAlone
     ;
 
-reverseDate
-returns [day, month, year, ambiguous]
-    : y=yearLong SEPARATOR m=monthByNameOrNumber SEPARATOR d=dayAsNumber
-        {$day, $month, $year = $d.value, $m.value, $y.value;}
-    | YEARMONTHDAY
-        {$day, $month, $year = int($YEARMONTHDAY.text.substring(6, 8)), int($YEARMONTHDAY.text.substring(4, 6)), int($YEARMONTHDAY.text.substring(0, 4));}
+dmyMonthAsName
+    : dayAsNumber SEPARATOR? monthAsName (SEPARATOR? yearLong)?
+    | monthAsName SEPARATOR dayAsNumber (SEPARATOR yearLong)?
+    | yearLong SEPARATOR monthAsName SEPARATOR dayAsNumber
+    | THE dayAsOrdinal OF monthAsName ((COMMA|OF)? yearLong)?
+    | monthAsName dayAsNumberOrOrdinal  (','? yearLong)?
+    | monthAsName (SEPARATOR? yearLong)?
     ;
 
-// Spoken Dates (e.g., "the third of october")
-spokenDate
-returns [day, month, year]
-    : 'the' d0=dayAsOrdinal 'of' m0=monthByName
-        {$day, $month, $year = $d0.value, $m0.value, None;}
-    | 'the' d1=dayAsOrdinal 'of' m1=monthByName 'in'? y1=yearLong
-        {$day, $month, $year = $d1.value, $m1.value, $y1.value;}
+dmyMonthAsNumber
+    : twoDigitNumber SEPARATOR twoDigitNumber (SEPARATOR yearLong)?
+    | yearLong SEPARATOR monthAsNumber SEPARATOR dayAsNumber
+    | monthAsNumber SEPARATOR yearLong
     ;
 
-// october/3
-// 3/october
-// 10/3
-dayAndMonth
-returns [day, month, ambiguous]
-    : m0=monthByName
-        {$day, $month, $ambiguous = None, $m0.value, False;}
-    | m1=monthByName SEPARATOR d1=dayAsNumber
-        {$day, $month, $ambiguous = $d1.value, $m1.value, False;}
-    | d2=dayAsNumber SEPARATOR m2=monthByName
-        {$day, $month, $ambiguous = $d2.value, $m2.value, False;}
-    | m3=dayAsNumber SEPARATOR d3=dayAsNumber
-        {$day, $month, $ambiguous = $d3.value, $m3.value, True;}
+dmyYearAlone
+    : yearLong
     ;
 
-dayMonthAndYearFormal returns [day, month, year]
-    : m=monthByName d=dayOrOrdinal  (','? y=yearLong)?
-        {$day, $month, $year = $m.value, $d.value, $y.value;}
+dmyLongNumber
+    : YEAR_MONTH_DAY
     ;
 
-yearLong returns [value]
-    : YEAR {$value = int($YEAR.text);}
+monthAsNameOrNumber
+    : monthAsNumber
+    | monthAsName
     ;
 
-monthByNameOrNumber returns [value]
-    : monthByNumber {$value = $monthByNumber.value;}
-    | monthByName   {$value = $monthByName.value;}
-    ;
-
-monthByName returns [value]
+monthAsName returns [value]
     : JAN {$value =  1;}
     | FEB {$value =  2;}
     | MAR {$value =  3;}
@@ -98,17 +77,33 @@ monthByName returns [value]
     | DEC {$value = 12;}
     ;
 
-monthByNumber returns [value]
-    : MONTH_BY_NUMBER {$value = int($MONTH_BY_NUMBER.text);}
+dayAsNumberOrOrdinal
+    : dayAsNumber
+    | dayAsOrdinal
     ;
 
-dayAsNumber returns [value]
-    : DAY {$value = int($DAY.text);}
+dayAsOrdinal returns [value]
+    : DAY_AS_ORDINAL
     ;
 
-dayOrOrdinal returns [value]
-    : dayAsNumber {$value = $dayAsNumber.value;}
-    | dayAsOrdinal {$value = $dayAsOrdinal.value;}
+monthAsNumber
+    : twoDigitNumber
+    ;
+
+dayAsNumber
+    : twoDigitNumber
+    ;
+
+yearLong
+    : fourDigitNumber
+    ;
+
+fourDigitNumber
+    : FOUR_DIGIT_NUMBER
+    ;
+
+twoDigitNumber
+    : TWO_DIGIT_NUMBER
     ;
 
 dayOfWeek returns [value]
@@ -121,22 +116,13 @@ dayOfWeek returns [value]
     | SUN {$value = 7;}
     ;
 
-dayAsOrdinal returns [value]
-    : DAY_AS_ORDINAL {$value = int($DAY_AS_ORDINAL.text[:-2])}
-    ;
 
-// Lexer rules for valid days (1-31)
-DAY
+// Lexer rule for valid two-digit numbers (1-31 for days, 1-12 for months)
+TWO_DIGIT_NUMBER
     : '0'?[1-9]     // 01-09, 1-9
     | '1'[0-9]      // 10-19
     | '2'[0-9]      // 20-29
     | '3'[01]       // 30-31
-    ;
-
-// Valid month range (1-12)
-MONTH_BY_NUMBER
-    : '0'?[1-9]     // 01-09, 1-9
-    | '1'[0-2]      // 10-12
     ;
 
 JAN : 'jan' ('uary')? ;
@@ -160,6 +146,21 @@ FRI : 'fri' ('day')? ;
 SAT : 'sat' ('urday')? ;
 SUN : 'sun' ('day')? ;
 
+THE : 'the';
+OF : 'of';
+IN : 'in';
+AT : 'at';
+COMMA : ',';
+
+LAST : 'last';
+NEXT : 'next'; 
+THIS : 'this';
+COMMING : 'comming';
+
+FROM : 'from';
+AFTER : 'after';
+BEFORE : 'before';
+
 DAY_AS_ORDINAL
     : '1st'
     | '2nd'
@@ -174,11 +175,12 @@ DAY_AS_ORDINAL
     ;
 
 // Force year to be 4 digits
-YEAR
+
+FOUR_DIGIT_NUMBER
     : [0-9] [0-9] [0-9] [0-9]  // Must be exactly 4 digits
     ;
 
-YEARMONTHDAY
+YEAR_MONTH_DAY
     : [0-9] [0-9] [0-9] [0-9] ( '0' [1-9] | '1' [0-2] ) ( '0' [1-9] | [1-2] [0-9] | '3' [0-1] )
     ;
 

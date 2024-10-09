@@ -7,7 +7,7 @@ GENERATED=$(OUTPUT_DIR)/$(GRAMMAR_DIR)/$(GRAMMAR)Lexer.py $(OUTPUT_DIR)/$(GRAMMA
 
 $(GENERATED): $(GRAMMAR_DIR)/$(GRAMMAR).g4
 	mkdir -p $(OUTPUT_DIR)
-	$(ANTLR) -Dlanguage=Python3 -o $(OUTPUT_DIR) $(GRAMMAR_DIR)/$(GRAMMAR).g4
+	$(ANTLR) -Dlanguage=Python3 -o $(OUTPUT_DIR) $(GRAMMAR_DIR)/$(GRAMMAR).g4 -visitor
 
 clean:
 	rm -rf $(OUTPUT_DIR)/$(GRAMMAR_DIR)
