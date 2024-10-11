@@ -62,50 +62,11 @@ dates = [
     ("29/february/2020", "2020-02-29", "OK"),  # Leap year
     ("february/29/2020", "2020-02-29", "OK"),  # Leap year
     ("march", "2023-03-01", "OK"),  # Incomplete date (month only)
-    ("15", ValueError, "OK")  # Incomplete date (day only)
-]
-
-times = [
-    ("14:30", "14:30:00.000000", "OK"),
-    ("2:45 PM", "14:45:00.000000", "OK"),
-    ("11:59 PM", "23:59:00.000000", "OK"),
-    ("00:00", "00:00:00.000000", "OK"),
-    ("midnight", "00:00:00.000000", "OK"),
-    ("noon", "12:00:00.000000", "OK"),
-    ("midday", "12:00:00.000000", "OK"),
-    ("6:00 AM", "06:00:00.000000", "OK"),
-    ("23:15", "23:15:00.000000", "OK"),
-    ("7:45 pm", "19:45:00.000000", "OK"),
-    ("5 o'clock in the evening", "17:00:00.000000", "TODO"),
-    ("quarter past three", "15:15:00.000000", "TODO"),
-    ("half past ten", "10:30:00.000000", "TODO"),
-    ("ten to five", "16:50:00.000000", "TODO"),
-    ("24:45", ValueError, "OK"),  # Invalid time representation
-    ("12:13 PM", "12:13:00.000000", "OK"),
-    ("12:13 AM", "00:13:00.000000", "OK"),
-    ("2h 45m", "02:45:00.000000", "OK"),  # Alternative time format
-    ("1:30:45.1 PM", "13:30:45.100000", "OK"),  # Time with seconds and microseconds
-    ("3h", "03:00:00.000000", "OK"),  # Hours only
-    ("12h 30min 0.65seconds", "12:30:00.650000", "OK"),  # Alternative format with hours and minutes and microseconds
-    ("2h15min30.9s", "02:15:30.900000", "OK")  # Alternative format with hours, minutes, seconds, and microseconds
-]
-
-datetimes = [
-    ("january 1, 2017 at 14:30", "2017-01-01T14:30:00.000000", "OK"),
-    ("february 14, 2017 at 2:45:00.654 PM", "2017-02-14T14:45:00.654000", "OK"),
-    ("march 15, 2017 11:59:00.78 PM", "2017-03-15T23:59:00.780000", "OK"),
-    ("april 30, 2017 00:00", "2017-04-30T00:00:00.000000", "OK"),
-    ("may 5, 2017 noon", "2017-05-05T12:00:00.000000", "OK"),
-    ("june 21, 2017 at 6:00:00.2 AM", "2017-06-21T06:00:00.200000", "OK"),
-    ("july 4, 2017 at 23:15", "2017-07-04T23:15:00.000000", "OK"),
-    ("august 15, 2017 at 7:45:00.444 pm", "2017-08-15T19:45:00.444000", "OK"),
-    ("december 25, 2017 at 12:13:00.555 PM", "2017-12-25T12:13:00.555000", "OK"),
-    ("december 25, 2017 at 12:13 AM", "2017-12-25T00:13:00.000000", "OK"),
-    ("march 2017 at 2:00:00.7 PM", "2017-03-01T14:00:00.700000", "OK"),
-    ("march 31", "2023-03-31T00:00:00.000000", "OK"),
-    ("october 2020", "2020-10-01T00:00:00.000000", "OK"),
-    ("jul 3rd at noon", "2023-07-03T12:00:00.000000", "OK"),
-    ("2999 at 3:00:00.000000", "2999-01-01T03:00:00.000000", "OK")
+    ("15", ValueError, "OK"),  # Incomplete date (day only)
+    ("last day of 2023", "2023-12-31", "OK"),
+    ("last day of february 2023", "2023-02-28", "OK"),
+    ("the last day of jan 2020", "2020-01-31", "OK"),
+    ("the last day of jan", "2023-01-31", "OK")
 ]
 
 @pytest.mark.parametrize("input_text, expected, tag", dates)

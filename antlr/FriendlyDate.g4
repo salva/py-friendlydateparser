@@ -2,9 +2,7 @@ grammar FriendlyDate;
 
 friendlyDateTime : dateTime EOF ;
 
-dateTime : date atTime? ;
-
-atTime : AT? time ;
+dateTime : date (AT? time)? ;
 
 friendlyDate : date EOF ;
 
@@ -64,27 +62,29 @@ dateRelativeDay : (LAST | NEXT | THIS)? weekDay ;
 
 dateRelativeWeek : weekDay (LAST | NEXT | THIS) WEEK ;
 
-dateRelativeMonth : (THE? (dayAsOrdinal | END) OF)? (LAST | NEXT | THIS) (MONTH | monthAsName) ;
+dateRelativeMonth : (THE? (dayAsOrdinal | lastDay) OF)? (LAST | NEXT | THIS) (MONTH | monthAsName) ;
 
-dateRelativeYearWihMonth : THE? (dayAsOrdinal | END) OF monthAsName (COMMA|OF)?  (LAST | NEXT | THIS) YEAR ;
+dateRelativeYearWihMonth : THE? (dayAsOrdinal | lastDay) OF monthAsName (COMMA|OF)?  (LAST | NEXT | THIS) YEAR ;
 
 dateRelativeYearWithoutMonth : (THE? END OF)? (LAST | NEXT | THIS) YEAR ;
 
 dateAbsolute
     : dateMonthAsName
     | dateMonthAsNumber
+    | dateYear
     | dateLongNumber
-    | yearLong
     ;
 
 dateMonthAsName
     : dayAsNumber SEPARATOR? monthAsName (SEPARATOR? yearLong)?
     | monthAsName SEPARATOR dayAsNumber (SEPARATOR yearLong)?
     | yearLong SEPARATOR monthAsName SEPARATOR dayAsNumber
-    | THE? (dayAsOrdinal | END) OF monthAsName ((COMMA|OF)? yearLong)?
+    | THE? (dayAsOrdinal | lastDay) OF monthAsName ((COMMA|OF)? yearLong)?
     | monthAsName dayAsNumberOrOrdinal  (','? yearLong)?
     | monthAsName (SEPARATOR? yearLong)?
     ;
+
+lastDay : LAST DAY;
 
 dateMonthAsNumber
     : twoDigitNumberLeft SEPARATOR twoDigitNumberRight (SEPARATOR yearLong)?
@@ -97,6 +97,8 @@ twoDigitNumberLeft : twoDigitNumber ;
 twoDigitNumberRight : twoDigitNumber ;
 
 dateLongNumber : YEAR_MONTH_DAY ;
+
+dateYear : (THE? lastDay OF)? yearLong;
 
 monthAsNameOrNumber : monthAsNumber | monthAsName ;
 
@@ -177,7 +179,7 @@ COLON : ':';
 SEMICOLON : ';';
 
 LAST : 'last';
-NEXT : 'next'; 
+NEXT : 'next';
 THIS : 'this';
 COMMING : 'comming';
 
@@ -199,6 +201,7 @@ MIDDAY : 'midday';
 END : 'end';
 BEGINNING : 'beginning';
 
+DAY : 'day';
 WEEK : 'week';
 MONTH : 'month';
 YEAR : 'year';

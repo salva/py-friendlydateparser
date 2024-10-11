@@ -38,9 +38,9 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             return {**aggregate, **nextResult} # shallow merge!
         return nextResult
 
-    #@trace
-    def visitChildren(self, ctx):
-        return super().visitChildren(ctx)
+    # @trace
+    # def visitChildren(self, ctx):
+    #    return super().visitChildren(ctx)
 
     @trace
     def visit(self, ctx):
@@ -50,21 +50,34 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             logging.exception(e)
             raise ValueError(f"Error parsing {ctx.toStringTree(recog=ctx.parser)}") from e
 
+
     @trace
     def visitFriendlyTime(self, ctx:FriendlyDateParser.FriendlyTimeContext):
-        return self._make_time(self.visitChildren(ctx))
+        return self.visitChildren(ctx)['time']
 
     @trace
     def visitFriendlyDate(self, ctx:FriendlyDateParser.FriendlyDateContext):
-        return self._make_date(self.visitChildren(ctx))
+        return self.visitChildren(ctx)['date']
 
     @trace
     def visitFriendlyDateTime(self, ctx:FriendlyDateParser.FriendlyDateTimeContext):
-        return self._make_datetime(self.visitChildren(ctx))
+        return self.visitChildren(ctx)['datetime']
 
     @trace
-    def visitAtTime(self, ctx:FriendlyDateParser.AtTimeContext):
-        return {'at_time': self.visitChildren(ctx)}
+    def visitTime(self, ctx:FriendlyDateParser.FriendlyTimeContext):
+        return {'time': self._make_time(self.visitChildren(ctx))}
+
+    @trace
+    def visitDate(self, ctx:FriendlyDateParser.FriendlyDateContext):
+        return {'date': self._make_date(self.visitChildren(ctx))}
+
+    @trace
+    def visitDateTime(self, ctx:FriendlyDateParser.FriendlyDateTimeContext):
+        return {'datetime': self._make_datetime(self.visitChildren(ctx))}
+
+    @trace
+    def visitLastDay(self, ctx:FriendlyDateParser.LastDayContext):
+        return {'day': -1 }
 
     @trace
     def visitMidnight(self, ctx:FriendlyDateParser.MidnightContext):
@@ -184,7 +197,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return time(hour, minute, second, microsecond)
 
     def _make_date(self, r):
-
         year = r.get('year')
         month = r.get('month')
         day = r.get('day')
@@ -196,18 +208,21 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
                 if day is None:
                     day = self._now.day
         if month is None:
-            month = 1
+            month = 12 if day == -1 else 1
+        elif month > 12:
+            raise ValueError("Invalid date: month value out of range")
+
+        last_day = monthrange(year, month)[1]
         if day is None:
             day = 1
-
-        if month > 12:
-            raise ValueError("Invalid date: month value out of range")
-        if day > monthrange(year, month)[1]:
+        elif day == -1:
+            day = last_day
+        elif day > last_day:
             raise ValueError("Invalid date: day value out of range")
 
         return date(year, month, day)
 
     def _make_datetime(self, r):
-        date = self._make_date(r)
-        time = self._make_time(r.get('at_time', {}))
+        date = r['date']
+        time = r.get('time', datetime.min.time())
         return datetime.combine(date, time)
