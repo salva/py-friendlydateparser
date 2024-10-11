@@ -1,6 +1,6 @@
 grammar FriendlyDate;
 
-friendlyDate
+friendlyDateTime
     : dateTime EOF
     ;
 
@@ -8,8 +8,43 @@ dateTime
     : date (AT? time)?
     ;
 
+
+friendlyDate
+    : date EOF
+    ;
+
+friendlyTime
+    : time EOF
+    ;
+
 time
-    : twoDigitNumber COLON twoDigitNumber (COLON twoDigitNumber)
+    : timeAbsolute
+    | MIDNIGHT
+    | NOON
+    | MIDDAY
+    ;
+
+timeAbsolute
+    : hour COLON minute (COLON second)? amPm?
+    | hour H ( minute M (second S)? )? amPm?
+    ;
+
+hour
+    : TWO_DIGIT_NUMBER
+    ;
+
+minute
+    : TWO_DIGIT_NUMBER
+    ;
+
+second
+    : SECONDS_FLOAT_NUMBER
+    | TWO_DIGIT_NUMBER
+    ;
+
+amPm returns [value]
+    : AM
+    | PM
     ;
 
 date
@@ -17,20 +52,6 @@ date
     | dateRelative
     ;
 
-// october/3/2017
-// october/3
-// 3/october/2017
-// 3/october
-// 10/3/2017
-// 10/3
-// october/2017
-// 10/2017
-// october
-// the third of october, 2017
-// the third of october 2017
-// the third of october
-
-// Relative Dates (e.g., "last Monday", "next Fri")
 dateRelative
     : (LAST | NEXT | (THIS (COMMING)?) ) dayOfWeek
     ;
@@ -124,13 +145,11 @@ dayOfWeek returns [value]
     | SUN {$value = 7;}
     ;
 
+SECONDS_FLOAT_NUMBER
+    : [0-5]?[0-9] '.' [0-9]*;
 
-// Lexer rule for valid two-digit numbers (1-31 for days, 1-12 for months)
 TWO_DIGIT_NUMBER
-    : '0'?[1-9]     // 01-09, 1-9
-    | '1'[0-9]      // 10-19
-    | '2'[0-9]      // 20-29
-    | '3'[01]       // 30-31
+    : [0-9] [0-9]?
     ;
 
 JAN : 'jan' ('uary')? ;
@@ -171,6 +190,17 @@ COMMING : 'comming';
 FROM : 'from';
 AFTER : 'after';
 BEFORE : 'before';
+
+H: 'h' ('r' | 'ours')? 's'?;
+M: 'm' ('in' | 'inute')? 's'?;
+S: 's' ('ec' | 'econd')? 's'?;
+
+AM : 'am';
+PM : 'pm';
+
+MIDNIGHT : 'midnight';
+NOON : 'noon';
+MIDDAY : 'midday';
 
 DAY_AS_ORDINAL
     : '1st'

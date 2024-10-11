@@ -6,15 +6,18 @@ from friendlydateparser.antlr.FriendlyDateLexer import FriendlyDateLexer
 from friendlydateparser.antlr.FriendlyDateParser import FriendlyDateParser
 from friendlydateparser.antlr.FriendlyDateVisitorPy import FriendlyDateVisitorPy
 
-from datetime import datetime
+from datetime import datetime, date
+import logging
 
 def _resolve_now(now):
     if now is None:
         return datetime.now()
     if isinstance(now, str):
-        return parse_date(now)
+        return parse_datetime(now)
     if isinstance(now, datetime):
         return now
+    if isinstance(now, date):
+        return datetime.combine(now, datetime.min.time())
     raise ValueError("Invalid value for 'now' parameter")
 
 def _resolve_month_first(month_first):
@@ -26,7 +29,7 @@ def _resolve_month_first(month_first):
         return date_format.startswith('%m')
     return month_first
 
-def parse_date(text, now=None, month_first=True):
+def _parse_anything(text, what, now=None, month_first=True):
 
     now = _resolve_now(now)
     month_first = _resolve_month_first(month_first)
@@ -38,13 +41,38 @@ def parse_date(text, now=None, month_first=True):
     error_listener = _ErrorListener()
     parser.removeErrorListeners()
     parser.addErrorListener(error_listener)
-    tree = parser.friendlyDate()
-    if error_listener.count > 0:
-        raise ValueError("Invalid date, " . error_listener.first_error())
-    visitor = FriendlyDateVisitorPy(now=now, month_first=month_first, _trace_visiting=True)
-    result = visitor.make_date(tree)
 
-    return result
+    visitor = FriendlyDateVisitorPy(now=now, month_first=month_first, _trace_visiting=True)
+
+    if what == "date":
+        tree = parser.friendlyDate()
+    elif what == "time":
+        tree = parser.friendlyTime()
+    elif what == "datetime":
+        tree = parser.friendlyDateTime()
+    else:
+        raise ValueError(f"Invalid value for 'what' parameter: {what}")
+
+    if error_listener.count > 0:
+        raise ValueError(f"Invalid {what}, {error_listener.first_error()}, parcial resutl: {tree.toStringTree(recog=parser)}")
+
+    if what == "date":
+        return visitor.make_date(tree)
+    elif what == "time":
+        return visitor.make_time(tree)
+    elif what == "datetime":
+        return visitor.make_datetime(tree)
+    else:
+        raise ValueError(f"Invalid value for 'what' parameter: {what}")
+
+def parse_time(text):
+    return _parse_anything(text, "time")
+
+def parse_date(text, now=None, month_first=True):
+    return _parse_anything(text, "date", now=now, month_first=month_first)
+
+def parse_datetime(text, now=None, month_first=True):
+    return _parse_anything(text, "datetime", now=now, month_first=month_first)
 
 class _ErrorListener(ErrorListener):
     def __init__(self):
