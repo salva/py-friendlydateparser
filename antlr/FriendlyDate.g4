@@ -1,95 +1,104 @@
 grammar FriendlyDate;
 
-friendlyDateTime
-    : dateTime EOF
-    ;
+friendlyDateTime : dateTime EOF ;
 
-dateTime
-    : date (AT? time)?
-    ;
+dateTime : date atTime? ;
 
+atTime : AT? time ;
 
-friendlyDate
-    : date EOF
-    ;
+friendlyDate : date EOF ;
 
-friendlyTime
-    : time EOF
-    ;
+friendlyTime : time EOF ;
 
 time
     : timeAbsolute
-    | MIDNIGHT
-    | NOON
-    | MIDDAY
+    | midnight
+    | noon
+    | timeNow
     ;
+
+midnight : MIDNIGHT ;
+
+noon : NOON | MIDDAY ;
+
+timeNow : NOW ;
 
 timeAbsolute
     : hour COLON minute (COLON second)? amPm?
     | hour H ( minute M (second S)? )? amPm?
     ;
 
-hour
-    : TWO_DIGIT_NUMBER
-    ;
+hour : twoDigitNumber ;
 
-minute
-    : TWO_DIGIT_NUMBER
-    ;
+minute : twoDigitNumber ;
 
 second
-    : SECONDS_FLOAT_NUMBER
-    | TWO_DIGIT_NUMBER
+    : twoDigitFloatNumber
     ;
 
-amPm returns [value]
-    : AM
-    | PM
+twoDigitFloatNumber
+    : TWO_DIGIT_NUMBER
+    | TWO_DIGIT_FLOAT_NUMBER
     ;
 
-date
-    : dateAbsolute
-    | dateRelative
-    ;
+amPm : am | pm ;
+
+am: AM;
+
+pm: PM;
+
+date : dateAbsolute | dateRelative ;
 
 dateRelative
-    : (LAST | NEXT | (THIS (COMMING)?) ) dayOfWeek
+    : today
+    | dateRelativeDay
+    | dateRelativeWeek
+    | dateRelativeMonth
+    | dateRelativeYearWithoutMonth
+    | dateRelativeYearWihMonth
     ;
+
+today : TODAY ;
+
+dateRelativeDay : (LAST | NEXT | THIS)? weekDay ;
+
+dateRelativeWeek : weekDay (LAST | NEXT | THIS) WEEK ;
+
+dateRelativeMonth : (THE? (dayAsOrdinal | END) OF)? (LAST | NEXT | THIS) (MONTH | monthAsName) ;
+
+dateRelativeYearWihMonth : THE? (dayAsOrdinal | END) OF monthAsName (COMMA|OF)?  (LAST | NEXT | THIS) YEAR ;
+
+dateRelativeYearWithoutMonth : (THE? END OF)? (LAST | NEXT | THIS) YEAR ;
 
 dateAbsolute
     : dateMonthAsName
     | dateMonthAsNumber
     | dateLongNumber
-    | dateYearAlone
+    | yearLong
     ;
 
 dateMonthAsName
     : dayAsNumber SEPARATOR? monthAsName (SEPARATOR? yearLong)?
     | monthAsName SEPARATOR dayAsNumber (SEPARATOR yearLong)?
     | yearLong SEPARATOR monthAsName SEPARATOR dayAsNumber
-    | THE dayAsOrdinal OF monthAsName ((COMMA|OF)? yearLong)?
+    | THE? (dayAsOrdinal | END) OF monthAsName ((COMMA|OF)? yearLong)?
     | monthAsName dayAsNumberOrOrdinal  (','? yearLong)?
     | monthAsName (SEPARATOR? yearLong)?
     ;
 
 dateMonthAsNumber
-    : twoDigitNumber SEPARATOR twoDigitNumber (SEPARATOR yearLong)?
+    : twoDigitNumberLeft SEPARATOR twoDigitNumberRight (SEPARATOR yearLong)?
     | yearLong SEPARATOR monthAsNumber SEPARATOR dayAsNumber
     | monthAsNumber SEPARATOR yearLong
     ;
 
-dateYearAlone
-    : yearLong
-    ;
+twoDigitNumberLeft : twoDigitNumber ;
 
-dateLongNumber
-    : YEAR_MONTH_DAY
-    ;
+twoDigitNumberRight : twoDigitNumber ;
 
-monthAsNameOrNumber
-    : monthAsNumber
-    | monthAsName
-    ;
+dateLongNumber : YEAR_MONTH_DAY ;
+
+monthAsNameOrNumber : monthAsNumber | monthAsName ;
 
 monthAsName returns [value]
     : JAN {$value =  1;}
@@ -106,36 +115,21 @@ monthAsName returns [value]
     | DEC {$value = 12;}
     ;
 
-dayAsNumberOrOrdinal
-    : dayAsNumber
-    | dayAsOrdinal
-    ;
+dayAsNumberOrOrdinal : dayAsNumber | dayAsOrdinal ;
 
-dayAsOrdinal returns [value]
-    : DAY_AS_ORDINAL
-    ;
+dayAsOrdinal : DAY_AS_ORDINAL ;
 
-monthAsNumber
-    : twoDigitNumber
-    ;
+monthAsNumber : twoDigitNumber ;
 
-dayAsNumber
-    : twoDigitNumber
-    ;
+dayAsNumber : twoDigitNumber ;
 
-yearLong
-    : fourDigitNumber
-    ;
+yearLong : fourDigitNumber ;
 
-fourDigitNumber
-    : FOUR_DIGIT_NUMBER
-    ;
+fourDigitNumber : FOUR_DIGIT_NUMBER ;
 
-twoDigitNumber
-    : TWO_DIGIT_NUMBER
-    ;
+twoDigitNumber : TWO_DIGIT_NUMBER ;
 
-dayOfWeek returns [value]
+weekDay returns [value]
     : MON {$value = 1;}
     | TUE {$value = 2;}
     | WED {$value = 3;}
@@ -145,12 +139,9 @@ dayOfWeek returns [value]
     | SUN {$value = 7;}
     ;
 
-SECONDS_FLOAT_NUMBER
-    : [0-5]?[0-9] '.' [0-9]*;
+TWO_DIGIT_FLOAT_NUMBER : [0-9]?[0-9] '.' [0-9]* ;
 
-TWO_DIGIT_NUMBER
-    : [0-9] [0-9]?
-    ;
+TWO_DIGIT_NUMBER : [0-9] [0-9]? ;
 
 JAN : 'jan' ('uary')? ;
 FEB : 'feb' ('ruary')? ;
@@ -178,6 +169,9 @@ OF : 'of';
 IN : 'in';
 AT : 'at';
 
+TODAY : 'today';
+NOW : 'now';
+
 COMMA : ',';
 COLON : ':';
 SEMICOLON : ';';
@@ -202,6 +196,13 @@ MIDNIGHT : 'midnight';
 NOON : 'noon';
 MIDDAY : 'midday';
 
+END : 'end';
+BEGINNING : 'beginning';
+
+WEEK : 'week';
+MONTH : 'month';
+YEAR : 'year';
+
 DAY_AS_ORDINAL
     : '1st'
     | '2nd'
@@ -215,17 +216,10 @@ DAY_AS_ORDINAL
     | '31st'
     ;
 
-// Force year to be 4 digits
+FOUR_DIGIT_NUMBER : [0-9] [0-9] [0-9] [0-9] ;
 
-FOUR_DIGIT_NUMBER
-    : [0-9] [0-9] [0-9] [0-9]  // Must be exactly 4 digits
-    ;
-
-YEAR_MONTH_DAY
-    : [0-9] [0-9] [0-9] [0-9] ( '0' [1-9] | '1' [0-2] ) ( '0' [1-9] | [1-2] [0-9] | '3' [0-1] )
-    ;
+YEAR_MONTH_DAY : [0-9] [0-9] [0-9] [0-9] ( '0' [1-9] | '1' [0-2] ) ( '0' [1-9] | [1-2] [0-9] | '3' [0-1] ) ;
 
 SEPARATOR : '/' | '-';
 
-// Lexer for numbers and whitespace
 WS : [ \t\r\n]+ -> skip ;

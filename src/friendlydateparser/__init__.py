@@ -42,8 +42,6 @@ def _parse_anything(text, what, now=None, month_first=True):
     parser.removeErrorListeners()
     parser.addErrorListener(error_listener)
 
-    visitor = FriendlyDateVisitorPy(now=now, month_first=month_first, _trace_visiting=True)
-
     if what == "date":
         tree = parser.friendlyDate()
     elif what == "time":
@@ -56,14 +54,8 @@ def _parse_anything(text, what, now=None, month_first=True):
     if error_listener.count > 0:
         raise ValueError(f"Invalid {what}, {error_listener.first_error()}, parcial resutl: {tree.toStringTree(recog=parser)}")
 
-    if what == "date":
-        return visitor.make_date(tree)
-    elif what == "time":
-        return visitor.make_time(tree)
-    elif what == "datetime":
-        return visitor.make_datetime(tree)
-    else:
-        raise ValueError(f"Invalid value for 'what' parameter: {what}")
+    visitor = FriendlyDateVisitorPy(now=now, month_first=month_first)
+    return visitor.visit(tree)
 
 def parse_time(text):
     return _parse_anything(text, "time")
