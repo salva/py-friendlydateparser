@@ -248,10 +248,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
     def visitNext_(self, ctx:FriendlyDateParser.Next_Context):
         return {'modifier': 'next'}
 
-    @trace
-    def visitThisComming(self, ctx:FriendlyDateParser.ThisCommingContext):
-        return {'modifier': 'this_comming'}
-
     def _promote_tdn(self, ctx, slot):
         return {slot: self.visitTwoDigitNumber(ctx.twoDigitNumber())}
 
@@ -332,10 +328,15 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
     def _make_date_relative_day(self, r, now):
         weekday = r['weekday']
         today = now.weekday()
-        if r.get('modifier') == 'this_comming':
-            delta = weekday - today
+        modifier = r.get('modifier')
+        delta = weekday - today
+        if modifier == 'next':
             if delta < 1:
                 delta += 7
+            return now + relativedelta(days=delta)
+        if modifier == 'last':
+            if delta > 0:
+                delta -= 7
             return now + relativedelta(days=delta)
         return self._this_weekday(now, weekday)
 
@@ -382,7 +383,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             raise ValueError("Invalid date: day value out of range")
 
         return date(year, month, day)
-
 
     def _make_date_relative_year(self, r, now):
         year = r.get('year', now.year)

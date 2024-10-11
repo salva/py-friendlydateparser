@@ -17,6 +17,8 @@ dates = [
     ("next week", "2023-10-16", "OK"),
     ("last week", "2023-10-02", "OK"),
     ("this comming friday", "2023-10-13", "OK"),
+    ("last friday", "2023-10-06", "OK"),
+    ("last monday", "2023-10-09", "OK"),
     ("the day after tomorrow", "2023-10-14", "OK"),
     ("the day before yesterday", "2023-10-10", "OK"),
     ("january/1/2017", "2017-01-01", "OK"),

@@ -72,7 +72,7 @@ theDayBeforeYesterday : THE DAY BEFORE YESTERDAY ;
 
 theDayAfterTomorrow : THE DAY AFTER TOMORROW ;
 
-dateRelativeDay : thisComming? weekDay ;
+dateRelativeDay : (last | next_ | this)? weekDay ;
 
 dateRelativeWeek : (weekDay OF?)? (last | next_ | this) WEEK ;
 
@@ -83,9 +83,8 @@ dateRelativeYearWithMonth : (THE? (dayAsOrdinal | lastDay) OF)? monthAsName (COM
 dateRelativeYearWithoutMonth : (THE? lastDay OF)? (last | next_ | this) YEAR ;
 
 last : LAST ;
-next_ : NEXT ;
+next_ : NEXT | THIS COMMING ;
 this : THIS ;
-thisComming : THIS COMMING ;
 
 dateAbsolute
     : dateMonthAsName
