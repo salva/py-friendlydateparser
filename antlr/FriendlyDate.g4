@@ -45,28 +45,47 @@ am: AM;
 
 pm: PM;
 
-date : dateAbsolute | dateRelative ;
+date : dateRelativeByDate | dateAbsolute ;
+
+dateRelativeByDate : dateRelative (BY date)? ;
 
 dateRelative
     : today
+    | yesterday
+    | tomorrow
+    | theDayAfterTomorrow
+    | theDayBeforeYesterday
     | dateRelativeDay
     | dateRelativeWeek
     | dateRelativeMonth
     | dateRelativeYearWithoutMonth
-    | dateRelativeYearWihMonth
+    | dateRelativeYearWithMonth
     ;
 
 today : TODAY ;
 
-dateRelativeDay : (LAST | NEXT | THIS)? weekDay ;
+yesterday : YESTERDAY ;
 
-dateRelativeWeek : weekDay (LAST | NEXT | THIS) WEEK ;
+tomorrow : TOMORROW ;
 
-dateRelativeMonth : (THE? (dayAsOrdinal | lastDay) OF)? (LAST | NEXT | THIS) (MONTH | monthAsName) ;
+theDayBeforeYesterday : THE DAY BEFORE YESTERDAY ;
 
-dateRelativeYearWihMonth : THE? (dayAsOrdinal | lastDay) OF monthAsName (COMMA|OF)?  (LAST | NEXT | THIS) YEAR ;
+theDayAfterTomorrow : THE DAY AFTER TOMORROW ;
 
-dateRelativeYearWithoutMonth : (THE? END OF)? (LAST | NEXT | THIS) YEAR ;
+dateRelativeDay : thisComming? weekDay ;
+
+dateRelativeWeek : (weekDay OF?)? (last | next_ | this) WEEK ;
+
+dateRelativeMonth : (THE? (dayAsOrdinal | lastDay) OF)? (last | next_ | this) (MONTH | monthAsName) ;
+
+dateRelativeYearWithMonth : (THE? (dayAsOrdinal | lastDay) OF)? monthAsName (COMMA|OF)?  (last | next_ | this) YEAR ;
+
+dateRelativeYearWithoutMonth : (THE? lastDay OF)? (last | next_ | this) YEAR ;
+
+last : LAST ;
+next_ : NEXT ;
+this : THIS ;
+thisComming : THIS COMMING ;
 
 dateAbsolute
     : dateMonthAsName
@@ -119,7 +138,11 @@ monthAsName returns [value]
 
 dayAsNumberOrOrdinal : dayAsNumber | dayAsOrdinal ;
 
-dayAsOrdinal : DAY_AS_ORDINAL ;
+dayAsOrdinal : twoDigitOrdinal | wordOrdinal ;
+
+twoDigitOrdinal : TWO_DIGIT_ORDINAL ;
+
+wordOrdinal : WORD_ORDINAL ;
 
 monthAsNumber : twoDigitNumber ;
 
@@ -132,13 +155,13 @@ fourDigitNumber : FOUR_DIGIT_NUMBER ;
 twoDigitNumber : TWO_DIGIT_NUMBER ;
 
 weekDay returns [value]
-    : MON {$value = 1;}
-    | TUE {$value = 2;}
-    | WED {$value = 3;}
-    | THU {$value = 4;}
-    | FRI {$value = 5;}
-    | SAT {$value = 6;}
-    | SUN {$value = 7;}
+    : MON {$value = 0;}
+    | TUE {$value = 1;}
+    | WED {$value = 2;}
+    | THU {$value = 3;}
+    | FRI {$value = 4;}
+    | SAT {$value = 5;}
+    | SUN {$value = 6;}
     ;
 
 TWO_DIGIT_FLOAT_NUMBER : [0-9]?[0-9] '.' [0-9]* ;
@@ -170,8 +193,11 @@ THE : 'the';
 OF : 'of';
 IN : 'in';
 AT : 'at';
+BY : 'by';
 
 TODAY : 'today';
+TOMORROW : 'tomorrow';
+YESTERDAY : 'yesterday';
 NOW : 'now';
 
 COMMA : ',';
@@ -206,7 +232,7 @@ WEEK : 'week';
 MONTH : 'month';
 YEAR : 'year';
 
-DAY_AS_ORDINAL
+TWO_DIGIT_ORDINAL
     : '1st'
     | '2nd'
     | '3rd'
@@ -217,6 +243,14 @@ DAY_AS_ORDINAL
     | '23rd'
     | '24th' | '25th' | '26th' | '27th' | '28th' | '29th' | '30th'
     | '31st'
+    ;
+
+WORD_ORDINAL
+    : 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth' | 'ninth' | 'tenth'
+    | 'eleventh' | 'twelfth' | 'thirteenth' | 'fourteenth' | 'fifteenth' | 'sixteenth' | 'seventeenth'
+    | 'eighteenth' | 'nineteenth' | 'twentieth' | 'twenty-first' | 'twenty-second' | 'twenty-third'
+    | 'twenty-fourth' | 'twenty-fifth' | 'twenty-sixth' | 'twenty-seventh' | 'twenty-eighth'
+    | 'twenty-ninth' | 'thirtieth' | 'thirty-first'
     ;
 
 FOUR_DIGIT_NUMBER : [0-9] [0-9] [0-9] [0-9] ;

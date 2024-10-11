@@ -4,6 +4,21 @@ from datetime import datetime, timedelta
 
 now = "2023-10-12"
 dates = [
+    ("the first of next month", "2023-11-01", "OK"),
+    ("the first of january next year", "2024-01-01", "OK"),
+    ("the first of last month", "2023-09-01", "OK"),
+    ("the first of october, last year", "2022-10-01", "OK"),
+    ("monday", "2023-10-09", "OK"),
+    ("next month", "2023-11-01", "OK"),
+    ("next year", "2024-01-01", "OK"),
+    ("last month", "2023-09-01", "OK"),
+    ("last year", "2022-01-01", "OK"),
+    ("monday next week", "2023-10-16", "OK"),
+    ("next week", "2023-10-16", "OK"),
+    ("last week", "2023-10-02", "OK"),
+    ("this comming friday", "2023-10-13", "OK"),
+    ("the day after tomorrow", "2023-10-14", "OK"),
+    ("the day before yesterday", "2023-10-10", "OK"),
     ("january/1/2017", "2017-01-01", "OK"),
     ("february/14/2017", "2017-02-14", "OK"),
     ("march/15/2017", "2017-03-15", "OK"),

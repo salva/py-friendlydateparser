@@ -52,7 +52,7 @@ def _parse_anything(text, what, now=None, month_first=True):
         raise ValueError(f"Invalid value for 'what' parameter: {what}")
 
     if error_listener.count > 0:
-        raise ValueError(f"Invalid {what}, {error_listener.first_error()}, parcial resutl: {tree.toStringTree(recog=parser)}")
+        raise ValueError(f"Invalid {what} '{text}', {error_listener.first_error()}, partial resutl: {tree.toStringTree(recog=parser)}")
 
     visitor = FriendlyDateVisitorPy(now=now, month_first=month_first)
     return visitor.visit(tree)
