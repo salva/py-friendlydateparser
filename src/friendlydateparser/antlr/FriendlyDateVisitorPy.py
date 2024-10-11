@@ -313,7 +313,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
 
 
     def _make_date_relative(self, r):
-        now = r.get('by', self._now.date())
+        now = r.get('date', self._now.date())
         rule = r['rule']
         if rule == 'today':
             return self._make_date_relative_day_delta(r, now, r['delta'])
@@ -355,16 +355,24 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
 
     def _make_date_relative_month(self, r, now):
         year = r.get('year', now.year)
-        month = r.get('month', now.month)
+        month = r.get('month')
 
-        d = date(year, month, 1)
-        if r['modifier'] == 'last':
-            d = d - relativedelta(months=1)
-        elif r['modifier'] == 'next':
-            d = d + relativedelta(months=1)
+        if month is None:
+            d = date(year, now.month, 1)
+            if r['modifier'] == 'last':
+                d = d - relativedelta(months=1)
+            elif r['modifier'] == 'next':
+                d = d + relativedelta(months=1)
 
-        year = d.year
-        month = d.month
+            year = d.year
+            month = d.month
+        else:
+            if r['modifier'] == 'last':
+                if month >= now.month:
+                    year -= 1
+            elif r['modifier'] == 'next':
+                if month <= now.month:
+                    year += 1
 
         last_day = monthrange(year, month)[1]
         day = r.get('day', 1)

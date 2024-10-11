@@ -81,7 +81,9 @@ dates = [
     ("last day of 2023", "2023-12-31", "OK"),
     ("last day of february 2023", "2023-02-28", "OK"),
     ("the last day of jan 2020", "2020-01-31", "OK"),
-    ("the last day of jan", "2023-01-31", "OK")
+    ("the last day of jan", "2023-01-31", "OK"),
+    ("the last day of next jan", "2024-01-31", "OK"),
+    ("the last day of next jan by october 2020", "2021-01-31", "OK")
 ]
 
 @pytest.mark.parametrize("input_text, expected, tag", dates)
