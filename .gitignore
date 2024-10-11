@@ -1,11 +1,8 @@
 *~
 *#
-
 __pycache__/
-
 src/friendlydateparser/antlr/*.interp
 src/friendlydateparser/antlr/*.tokens
-
 src/friendlydateparser/antlr/FriendlyDateLexer.py
 src/friendlydateparser/antlr/FriendlyDateListener.py
 src/friendlydateparser/antlr/FriendlyDateParser.py
