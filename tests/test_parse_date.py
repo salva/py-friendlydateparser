@@ -98,6 +98,9 @@ dates = [
     ("week 55 2023", ValueError, "OK"),  # Out of range week number
     ("sunday week 54 2021", ValueError, "OK"),  # Out of range week number for year 2021
     ("week 0 april 2023", ValueError, "OK"),  # Invalid week number (zero)
+    ("second sunday of 2023", "2023-01-08", "OK"),
+    ("second sunday of january 2023", "2023-01-08", "OK"),
+    ("131st day of 2023", "2023-05-11", "OK"),
 ]
 
 @pytest.mark.parametrize("input_text, expected, tag", dates)

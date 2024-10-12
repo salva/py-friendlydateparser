@@ -9,15 +9,32 @@ import os
 
 traceme = True or os.environ.get("FRIENDLYDATEPARSER_TRACE", "0") == "1"
 
-ordinal_word2number = { 'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
-                        'sixth': 6, 'seventh': 7, 'eighth': 8, 'ninth': 9, 'tenth': 10,
-                        'eleventh': 11, 'twelfth': 12, 'thirteenth': 13, 'fourteenth': 14,
-                        'fifteenth': 15, 'sixteenth': 16, 'seventeenth': 17,
-                        'eighteenth': 18, 'nineteenth': 19, 'twentieth': 20,
-                        'twenty-first': 21, 'twenty-second': 22, 'twenty-third': 23,
-                        'twenty-fourth': 24, 'twenty-fifth': 25, 'twenty-sixth': 26,
-                        'twenty-seventh': 27, 'twenty-eighth': 28, 'twenty-ninth': 29,
-                        'thirtieth': 30, 'thirty-first': 31 }
+ordinals = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth',
+             'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth',
+             'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth',
+             'seventeenth', 'eighteenth', 'nineteenth', 'twentieth',
+             'twenty-first', 'twenty-second', 'twenty-third', 'twenty-fourth',
+             'twenty-fifth', 'twenty-sixth', 'twenty-seventh', 'twenty-eighth',
+             'twenty-ninth', 'thirtieth', 'thirty-first', 'thirty-second',
+             'thirty-third', 'thirty-fourth', 'thirty-fifth', 'thirty-sixth',
+             'thirty-seventh', 'thirty-eighth', 'thirty-ninth', 'fortieth',
+             'forty-first', 'forty-second', 'forty-third', 'forty-fourth',
+             'forty-fifth', 'forty-sixth', 'forty-seventh', 'forty-eighth',
+             'forty-ninth', 'fiftieth', 'fifty-first', 'fifty-second',
+             'fifty-third', 'fifty-fourth', 'fifty-fifth', 'fifty-sixth',
+             'fifty-seventh', 'fifty-eighth', 'fifty-ninth', 'sixtieth',
+             'sixty-first', 'sixty-second', 'sixty-third', 'sixty-fourth',
+             'sixty-fifth', 'sixty-sixth', 'sixty-seventh', 'sixty-eighth',
+             'sixty-ninth', 'seventieth', 'seventy-first', 'seventy-second',
+             'seventy-third', 'seventy-fourth', 'seventy-fifth',
+             'seventy-sixth', 'seventy-seventh', 'seventy-eighth',
+             'seventy-ninth', 'eightieth', 'eighty-first', 'eighty-second',
+             'eighty-third', 'eighty-fourth', 'eighty-fifth', 'eighty-sixth',
+             'eighty-seventh', 'eighty-eighth', 'eighty-ninth', 'ninetieth',
+             'ninety-first', 'ninety-second', 'ninety-third', 'ninety-fourth',
+             'ninety-fifth', 'ninety-sixth', 'ninety-seventh', 'ninety-eighth',
+             'ninety-ninth' ]
+ordinal2number = {ordinal: index + 1 for index, ordinal in enumerate(ordinals)}
 
 def trace(func):
     if traceme:
@@ -167,12 +184,22 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return {'day': self.visitChildren(ctx)}
 
     @trace
+    def visitDayPositionOrdinal(self, ctx:FriendlyDateParser.DayPositionOrdinalContext):
+        return {'day_position': self.visitChildren(ctx)}
+
+    @trace
+    def visitDayPositionNumber(self, ctx:FriendlyDateParser.DayPositionNumberContext):
+        return {'day_position': self.visitChildren(ctx)}
+
+    @trace
     def visitTwoDigitOrdinal(self, ctx:FriendlyDateParser.TwoDigitOrdinalContext):
-        return int(ctx.TWO_DIGIT_ORDINAL().getText()[:-2])
+        return int(ctx.ORDINAL_DIGITS().getText()[:-2])
 
     @trace
     def visitWordOrdinal(self, ctx:FriendlyDateParser.WordOrdinalContext):
-        return ordinal_word2number[ctx.WORD_ORDINAL().getText()]
+        if ctx.SECOND():
+            return 2
+        return ordinal2number[ctx.ORDINAL_WORDS().getText()]
 
     @trace
     def visitDayAsNumber(self, ctx:FriendlyDateParser.DayAsNumberContext):
@@ -288,6 +315,9 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         if r.get('week') is not None:
             return self._make_date_absolute_by_week(r)
 
+        if r.get('day_position') is not None:
+            return self._make_date_absolute_by_day_position(r)
+
         year = r.get('year')
         month = r.get('month')
         day = r.get('day')
@@ -348,6 +378,29 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             raise ValueError("Invalid date: week value out of range")
 
         return monday + timedelta(days=weekday)
+
+    def _make_date_absolute_by_day_position(self, r):
+        day_position = r['day_position']
+        weekday = r.get('weekday', None)
+        year = r.get('year', self._now.year)
+        month = r.get('month')
+
+        if month is not None and (month == 0 or month > 12):
+            raise ValueError("Invalid date: month value out of range")
+
+        first_day = date(year, month or 1, 1)
+        if weekday is None:
+            d = first_day + timedelta(days=day_position-1)
+        else:
+            first_weekday = first_day.weekday()
+            off = weekday - first_weekday
+            if off < 0:
+                off += 7
+            d = first_day + timedelta(days=off + 7*(day_position-1))
+
+        if d.year != year or (month is not None and d.month != month):
+            raise ValueError("Invalid date: day ordinal out of range")
+        return d
 
     def _make_datetime(self, r):
         date = r['date']
