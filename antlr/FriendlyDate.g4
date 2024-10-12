@@ -90,6 +90,7 @@ dateAbsolute
     : dateMonthAsName
     | dateMonthAsNumber
     | dateYear
+    | dateWithWeek
     | dateLongNumber
     ;
 
@@ -110,11 +111,24 @@ dateMonthAsNumber
     | monthAsNumber SEPARATOR yearLong
     ;
 
+dateWithWeek
+    : (THE? weekDay OF?)?
+        weekNumber
+        (OF?
+            ( monthAsNameOrNumber SEPARATOR yearLong
+            | monthAsName (OF? yearLong)?
+            | yearLong
+            )
+        )?
+    ;
+
+weekNumber : WEEK twoDigitNumber ;
+
 twoDigitNumberLeft : twoDigitNumber ;
 
 twoDigitNumberRight : twoDigitNumber ;
 
-dateLongNumber : YEAR_MONTH_DAY ;
+dateLongNumber : EIGHT_DIGIT_NUMBER ;
 
 dateYear : (THE? lastDay OF)? yearLong;
 
@@ -153,6 +167,10 @@ fourDigitNumber : FOUR_DIGIT_NUMBER ;
 
 twoDigitNumber : TWO_DIGIT_NUMBER ;
 
+anyDigitNumber : TWO_DIGIT_NUMBER | FOUR_DIGIT_NUMBER | EIGHT_DIGIT_NUMBER | ANY_DIGIT_NUMBER ;
+
+// threeDigitNumber : TWO_DIGIT_NUMBER | THREE_DIGIT_NUMBER ;
+
 weekDay returns [value]
     : MON {$value = 0;}
     | TUE {$value = 1;}
@@ -163,9 +181,17 @@ weekDay returns [value]
     | SUN {$value = 6;}
     ;
 
-TWO_DIGIT_FLOAT_NUMBER : [0-9]?[0-9] '.' [0-9]* ;
+fragment DIGIT : [0-9] ;
 
-TWO_DIGIT_NUMBER : [0-9] [0-9]? ;
+TWO_DIGIT_FLOAT_NUMBER : DIGIT? DIGIT '.' DIGIT* ;
+
+TWO_DIGIT_NUMBER : DIGIT DIGIT? ;
+
+FOUR_DIGIT_NUMBER : [0-9] [0-9] [0-9] [0-9] ;
+
+EIGHT_DIGIT_NUMBER : [0-9] [0-9] [0-9] [0-9] ( '0' [1-9] | '1' [0-2] ) ( '0' [1-9] | [1-2] [0-9] | '3' [0-1] ) ;
+
+ANY_DIGIT_NUMBER : DIGIT+ ;
 
 JAN : 'jan' ('uary')? ;
 FEB : 'feb' ('ruary')? ;
@@ -251,10 +277,6 @@ WORD_ORDINAL
     | 'twenty-fourth' | 'twenty-fifth' | 'twenty-sixth' | 'twenty-seventh' | 'twenty-eighth'
     | 'twenty-ninth' | 'thirtieth' | 'thirty-first'
     ;
-
-FOUR_DIGIT_NUMBER : [0-9] [0-9] [0-9] [0-9] ;
-
-YEAR_MONTH_DAY : [0-9] [0-9] [0-9] [0-9] ( '0' [1-9] | '1' [0-2] ) ( '0' [1-9] | [1-2] [0-9] | '3' [0-1] ) ;
 
 SEPARATOR : '/' | '-';
 

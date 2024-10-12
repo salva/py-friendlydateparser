@@ -85,7 +85,18 @@ dates = [
     ("the last day of jan 2020", "2020-01-31", "OK"),
     ("the last day of jan", "2023-01-31", "OK"),
     ("the last day of next jan", "2024-01-31", "OK"),
-    ("the last day of next jan by october 2020", "2021-01-31", "OK")
+    ("the last day of next jan by october 2020", "2021-01-31", "OK"),
+    ("sunday week 1 2012", "2012-01-08", "OK"),
+    ("monday week 4 april 2023", "2023-04-24", "OK"),
+    ("wednesday week 2 march 2020", "2020-03-11", "OK"),
+    ("week 3 june", "2023-06-12", "OK"),
+    ("monday week 45 2019", "2019-11-04", "OK"),
+    ("friday week 5 september", ValueError, "OK"), # Out of range week number
+    ("week 55 2023", ValueError, "OK"),  # Out of range week number
+    ("sunday week 54 2021", ValueError, "OK"),  # Out of range week number for year 2021
+    ("week 0 april 2023", ValueError, "OK"),  # Invalid week number (zero)
+
+
 ]
 
 @pytest.mark.parametrize("input_text, expected, tag", dates)

@@ -155,6 +155,10 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return self._promote_tdn(ctx, 'month')
 
     @trace
+    def visitWeekNumber(self, ctx:FriendlyDateParser.WeekNumberContext):
+        return self._promote_tdn(ctx, 'week')
+
+    @trace
     def visitDayAsOrdinal(self, ctx:FriendlyDateParser.DayAsOrdinalContext):
         return {'day': self.visitChildren(ctx)}
 
@@ -277,9 +281,13 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return time(hour, minute, second, microsecond)
 
     def _make_date_absolute(self, r):
+        if r.get('week') is not None:
+            return self._make_date_absolute_by_week(r)
+
         year = r.get('year')
         month = r.get('month')
         day = r.get('day')
+        week = r.get('week')
 
         if year is None:
             year = self._now.year
@@ -287,9 +295,10 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
                 month = self._now.month
                 if day is None:
                     day = self._now.day
+
         if month is None:
             month = 12 if day == -1 else 1
-        elif month > 12:
+        elif month == 0 or month > 12:
             raise ValueError("Invalid date: month value out of range")
 
         last_day = monthrange(year, month)[1]
@@ -297,10 +306,32 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             day = 1
         elif day == -1:
             day = last_day
-        elif day > last_day:
+        elif day == 0 or day > last_day:
             raise ValueError("Invalid date: day value out of range")
 
         return date(year, month, day)
+
+    def _make_date_absolute_by_week(self, r):
+        week = r['week']
+        if week == 0:
+            raise ValueError("Invalid date: week value out of range")
+
+        year = r.get('year', self._now.year)
+        month = r.get('month')
+        weekday = r.get('weekday', 0)
+
+        first_day = date(year, month or 1, 1)
+        first_weekday = first_day.weekday()
+        if first_weekday <= 3:
+            week -= 1
+
+        monday = first_day + timedelta(days=7*week-first_weekday)
+        wednesday = monday + timedelta(days=3)
+
+        if wednesday.year > year or (month is not None and wednesday.month > month):
+            raise ValueError("Invalid date: week value out of range")
+
+        return monday + timedelta(days=weekday)
 
     def _make_datetime(self, r):
         date = r['date']
