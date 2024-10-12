@@ -95,6 +95,10 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return {'day': -1 }
 
     @trace
+    def visitLastWeek(self, ctx:FriendlyDateParser.LastWeekContext):
+        return {'week': -1 }
+
+    @trace
     def visitMidnight(self, ctx:FriendlyDateParser.MidnightContext):
         return {'hour': 0, 'minute': 0, 'second': 0, 'microsecond': 0}
 
@@ -315,10 +319,21 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         week = r['week']
         if week == 0:
             raise ValueError("Invalid date: week value out of range")
-
         year = r.get('year', self._now.year)
         month = r.get('month')
+        if month is not None and (month == 0 or month > 12):
+            raise ValueError("Invalid date: month value out of range")
         weekday = r.get('weekday', 0)
+
+        if week == -1:
+            week = 0
+            if month is None:
+                year += 1
+            elif month < 12:
+                month += 1
+            elif month == 12:
+                month = 1
+                year += 1
 
         first_day = date(year, month or 1, 1)
         first_weekday = first_day.weekday()
@@ -328,7 +343,8 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         monday = first_day + timedelta(days=7*week-first_weekday)
         wednesday = monday + timedelta(days=3)
 
-        if wednesday.year > year or (month is not None and wednesday.month > month):
+        if wednesday.year > year or \
+           (month is not None and wednesday.year == year and wednesday.month > month):
             raise ValueError("Invalid date: week value out of range")
 
         return monday + timedelta(days=weekday)

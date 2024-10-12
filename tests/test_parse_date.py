@@ -91,12 +91,13 @@ dates = [
     ("wednesday week 2 march 2020", "2020-03-11", "OK"),
     ("week 3 june", "2023-06-12", "OK"),
     ("monday week 45 2019", "2019-11-04", "OK"),
+    ("monday week 5 7/2019", ValueError, "OK"),
+    ("last week of 2029", "2029-12-24", "OK"),
+    ("last week of jan 2029", "2029-01-22", "OK"),
     ("friday week 5 september", ValueError, "OK"), # Out of range week number
     ("week 55 2023", ValueError, "OK"),  # Out of range week number
     ("sunday week 54 2021", ValueError, "OK"),  # Out of range week number for year 2021
     ("week 0 april 2023", ValueError, "OK"),  # Invalid week number (zero)
-
-
 ]
 
 @pytest.mark.parametrize("input_text, expected, tag", dates)

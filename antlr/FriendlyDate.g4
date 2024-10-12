@@ -112,15 +112,26 @@ dateMonthAsNumber
     ;
 
 dateWithWeek
-    : (THE? weekDay OF?)?
-        weekNumber
-        (OF?
-            ( monthAsNameOrNumber SEPARATOR yearLong
-            | monthAsName (OF? yearLong)?
-            | yearLong
+    : THE?
+        (weekDay OF?)?
+        ( weekNumber
+            (OF?
+                ( monthAsNameOrNumber SEPARATOR yearLong
+                | monthAsName (OF? yearLong)?
+                | yearLong
+                )
+            )?
+        | lastWeek
+            (OF?
+                ( monthAsNameOrNumber SEPARATOR yearLong
+                | monthAsName (OF? yearLong)?
+                | yearLong
+                )
             )
-        )?
+        )
     ;
+
+lastWeek: LAST WEEK;
 
 weekNumber : WEEK twoDigitNumber ;
 
