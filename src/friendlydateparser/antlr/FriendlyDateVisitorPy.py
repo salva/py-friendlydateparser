@@ -192,6 +192,12 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return {'day_position': self.visitChildren(ctx)}
 
     @trace
+    def visitWeekDayPositionLast(self, ctx:FriendlyDateParser.WeekDayPositionLastContext):
+        r = self.visitChildren(ctx)
+        r['day_position'] = -1
+        return r
+
+    @trace
     def visitTwoDigitOrdinal(self, ctx:FriendlyDateParser.TwoDigitOrdinalContext):
         return int(ctx.ORDINAL_DIGITS().getText()[:-2])
 
@@ -380,13 +386,25 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return monday + timedelta(days=weekday)
 
     def _make_date_absolute_by_day_position(self, r):
+        logging.warning(f"make_date_absolute_by_day_position {r}")
         day_position = r['day_position']
         weekday = r.get('weekday', None)
         year = r.get('year', self._now.year)
         month = r.get('month')
+        month1, year1 = month, year # For checking if the day is out of range later
 
         if month is not None and (month == 0 or month > 12):
             raise ValueError("Invalid date: month value out of range")
+
+        if day_position == -1:
+            if month is None:
+                year += 1
+            elif month < 12:
+                month += 1
+            else:
+                month = 1
+                year += 1
+            day_position = 0
 
         first_day = date(year, month or 1, 1)
         if weekday is None:
@@ -398,7 +416,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
                 off += 7
             d = first_day + timedelta(days=off + 7*(day_position-1))
 
-        if d.year != year or (month is not None and d.month != month):
+        if d.year != year1 or (month1 is not None and d.month != month1):
             raise ValueError("Invalid date: day ordinal out of range")
         return d
 

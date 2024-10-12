@@ -134,7 +134,7 @@ dateWithWeek
 
 dateWithDayPosition
     : THE?
-        (weekDayPositionOrdinal | dayPositionNumber)
+        (weekDayPositionOrdinal | weekDayPositionLast | dayPositionNumber)
         (OF?
             ( monthAsNameOrNumber SEPARATOR yearLong
             | monthAsName (OF? yearLong)?
@@ -144,6 +144,8 @@ dateWithDayPosition
     ;
 
 weekDayPositionOrdinal : dayPositionOrdinal (DAY | weekDay) ;
+
+weekDayPositionLast : LAST weekDay ;
 
 dayPositionNumber : DAY anyDigitNumber ;
 
