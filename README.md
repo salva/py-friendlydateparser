@@ -6,7 +6,7 @@ time, date, or datetime objects.
 The aim is to be able to accept date expressions that, even if
 complex, are frequently used in everyday life.
 
-### 1. `parse_time(text)`
+### `parse_time(text)`
 
 Extracts time information from a given string and returns a time
 object. This function is suitable for parsing times like "2:45 PM",
@@ -23,7 +23,7 @@ object. This function is suitable for parsing times like "2:45 PM",
   # Returns: datetime.time(14, 45)
   ```
 
-### 2. `parse_date(text, now=None, month_first=True)`
+### `parse_date(text, now=None, month_first=True)`
 
 Parses date information from a given string and returns a date
 object. The function can handle different formats including relative
@@ -47,7 +47,7 @@ dates (e.g., "10/3/2017", "15th of July").
   # Assuming today is 2023-10-10, returns: datetime.date(2023, 11, 1)
   ```
 
-### 3. `parse_datetime(text, now=None, month_first=True)`
+### `parse_datetime(text, now=None, month_first=True)`
 
 Parses both date and time information from a given string and returns
 a datetime object. The function handles a wide range of date and time
@@ -121,6 +121,7 @@ for it, and I will try to add it in a future update.
 
 - If the input text is incomplete or not recognizable as a valid
   date/time, a `ValueError` may be raised.
+
 - The module tries to handle incomplete dates (for instance, "october"
   is equivalent to "the first of october of this year"), but very
   ambiguous cases as "9" are just rejected.
@@ -128,7 +129,7 @@ for it, and I will try to add it in a future update.
 ### Example Usage
 
 ```python
-from your_module_name import parse_date, parse_time, parse_datetime
+from friendlydateparser import parse_date, parse_time, parse_datetime
 
 # Parsing a date
 date_obj = parse_date("the last day of next jan")
@@ -145,12 +146,36 @@ datetime_obj = parse_datetime("march 15, 2017 11:59 PM")
 
 ### See Also
 
-- `datetime` module: For working with date and time objects in Python.
-- `time` module: Provides various time-related functions, such as working with timestamps or sleep functions. This can be useful in combination with date and time parsing.
-- `dateutil.relativedelta`: For relative date calculations, like adding or subtracting months or years.
-- `calendar` module: For calendar-related functions, such as determining leap years or getting the number of days in a month.
-- `dateparser` library: A library similar to this module, which parses natural language dates. Note that `dateparser` is older but currently unmaintained.
-- `pytz` library: For handling time zones in Python. It can be useful when parsing dates and times that involve different time zones or when converting between local times and UTC.
+- [`datetime`](https://docs.python.org/3/library/datetime.html): For
+  working with date and time objects in Python.
+
+- [`time`](https://docs.python.org/3/library/time.html): Provides
+  various time-related functions, such as working with timestamps or
+  sleep functions. This can be useful in combination with date and
+  time parsing.
+
+- [`dateutil.relativedelta`](https://dateutil.readthedocs.io/en/stable/relativedelta.html):
+  For relative date calculations, like adding or subtracting months or
+  years.
+
+- [`calendar`](https://docs.python.org/3/library/calendar.html): For
+  calendar-related functions, such as determining leap years or
+  getting the number of days in a month.
+
+- [`pytz`](https://pypi.org/project/pytz/): For handling time zones in
+  Python. It can be useful when parsing dates and times that involve
+  different time zones or when converting between local times and UTC.
+
+- [`pendulum`](https://pendulum.eustace.io/): A library that provides
+  easy-to-use functions for parsing, formatting, and manipulating
+  dates and times, with a focus on improved datetime management and
+  natural language parsing.
+
+- [`dateparser`](https://dateparser.readthedocs.io/en/latest/): A
+  library similar to this module, which parses natural language
+  dates. Note that as of October 2024, it has not been updated for a
+  long time.
+
 
 ### License
 
