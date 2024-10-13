@@ -154,6 +154,6 @@ datetime_obj = parse_datetime("march 15, 2017 11:59 PM")
 
 ### License
 
-Copyright (c) 2024 Your Name
+Copyright (c) 2024 Salvador Fandiño García
 
 This project is licensed under the MIT License. See the `LICENSE` file for more details.
