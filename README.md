@@ -95,12 +95,8 @@ including but not limited to:
 - **Special Terms**: Terms like "midnight", "noon" are also supported,
   allowing parsing of common time-related expressions.
 
-- **Ranges and Intervals**: Expressions involving ranges like "between
-  March 10th and 15th" or "from 2 PM to 4 PM" are supported to capture
-  intervals in date and time.
-
 - **Implicit Dates**: Natural expressions like "tomorrow at 5 PM",
-  "next Monday morning", or "this evening" are parsed effectively to
+  "next Monday", or "this month" are parsed effectively to
   provide accurate datetime objects.
 
 - **Week Numbers**: References like "week 42 of 2023" can be parsed,
