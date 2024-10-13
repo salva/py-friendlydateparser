@@ -1,10 +1,16 @@
 ## Module: Date and Time Parsing
 
-This Python module provides three key methods for parsing text into time, date, or datetime objects. These methods are:
+This Python module provides three key methods for parsing text into
+time, date, or datetime objects.
+
+The aim is to be able to accept date expressions that, even if
+complex, are frequently used in everyday life.
 
 ### 1. `parse_time(text)`
 
-- **Description**: Extracts time information from a given string and returns a time object. This function is suitable for parsing times like "2:45 PM", "14:30", "midnight", etc.
+Extracts time information from a given string and returns a time
+object. This function is suitable for parsing times like "2:45 PM",
+"14:30", "midnight", etc.
 
 - **Parameters**:
   - `text` (str): The text containing time information to be parsed.
@@ -19,12 +25,19 @@ This Python module provides three key methods for parsing text into time, date, 
 
 ### 2. `parse_date(text, now=None, month_first=True)`
 
-- **Description**: Parses date information from a given string and returns a date object. The function can handle different formats including relative date descriptions (e.g., "next month", "last Friday") or explicit dates (e.g., "10/3/2017", "15th of July").
+Parses date information from a given string and returns a date
+object. The function can handle different formats including relative
+date descriptions (e.g., "next month", "last Friday") or explicit
+dates (e.g., "10/3/2017", "15th of July").
 
 - **Parameters**:
   - `text` (str): The text containing date information to be parsed.
-  - `now` (datetime.date or datetime.datetime, optional): The reference date to use for relative expressions. Defaults to the current date if not specified.
-  - `month_first` (bool, optional): Indicates whether the month appears first in numerical dates (e.g., `10/3` is treated as October 3rd if `month_first=True`). Defaults to `True`.
+  - `now` (datetime.date or datetime.datetime, optional): The
+      reference date to use for relative expressions. Defaults to the
+      current date if not specified.
+  - `month_first` (bool, optional): Indicates whether the month
+      appears first in numerical dates (e.g., `10/3` is treated as
+      October 3rd if `month_first=True`). Defaults to `True`.
 
 - **Returns**: A `datetime.date` object.
 
@@ -36,12 +49,18 @@ This Python module provides three key methods for parsing text into time, date, 
 
 ### 3. `parse_datetime(text, now=None, month_first=True)`
 
-- **Description**: Parses both date and time information from a given string and returns a datetime object. The function handles a wide range of date and time formats, including explicit and relative formats.
+Parses both date and time information from a given string and returns
+a datetime object. The function handles a wide range of date and time
+formats, including explicit and relative formats.
 
 - **Parameters**:
   - `text` (str): The text containing datetime information to be parsed.
-  - `now` (datetime.date or datetime.datetime, optional): The reference date to use for relative expressions. Defaults to the current date and time if not specified.
-  - `month_first` (bool, optional): Indicates whether the month appears first in numerical dates (e.g., `10/3` is treated as October 3rd if `month_first=True`). Defaults to `True`.
+  - `now` (datetime.date or datetime.datetime, optional): The
+      reference date to use for relative expressions. Defaults to the
+      current date and time if not specified.
+  - `month_first` (bool, optional): Indicates whether the month
+      appears first in numerical dates (e.g., `10/3` is treated as
+      October 3rd if `month_first=True`). Defaults to `True`.
 
 - **Returns**: A `datetime.datetime` object.
 
@@ -53,19 +72,58 @@ This Python module provides three key methods for parsing text into time, date, 
 
 ### Supported Formats
 
-The module can parse a wide variety of date and time formats, including but not limited to:
+The module can parse a wide variety of date and time formats,
+including but not limited to:
 
-- **Relative Dates**: "the first of next month", "next week", "last Friday", "the day after tomorrow".
-- **Explicit Dates**: "10/3/2017", "march 15, 2017", "15/july/2023".
-- **Relative Weekdays**: "monday next week", "last monday", "second sunday of 2023".
-- **Datetime Formats**: "january 1, 2017 at 14:30", "february 14, 2017 at 2:45 PM".
+- **Relative Dates**: Expressions like "the first of next month",
+  "next week", "last Friday", "the day after tomorrow" are supported,
+  allowing flexible parsing of commonly used phrases.
 
-The module supports both common formats like `mm/dd/yyyy` and `dd/mm/yyyy`, with the ability to distinguish based on the `month_first` parameter.
+- **Explicit Dates**: Formats such as "10/3/2017", "march 15, 2017",
+  "15/july/2023" are accepted, with the ability to handle both
+  `mm/dd/yyyy` and `dd/mm/yyyy` formats based on the `month_first`
+  parameter.
+
+- **Relative Weekdays**: Phrases like "monday next week", "last
+  monday", "second sunday of 2023" are parsed, allowing users to
+  reference specific weekdays in relative terms.
+
+- **Datetime Formats**: Full date and time expressions such as
+  "january 1, 2017 at 14:30", "february 14, 2017 at 2:45 PM" are
+  supported, making it easy to parse datetime values from text.
+
+- **Special Terms**: Terms like "midnight", "noon" are also supported,
+  allowing parsing of common time-related expressions.
+
+- **Ranges and Intervals**: Expressions involving ranges like "between
+  March 10th and 15th" or "from 2 PM to 4 PM" are supported to capture
+  intervals in date and time.
+
+- **Implicit Dates**: Natural expressions like "tomorrow at 5 PM",
+  "next Monday morning", or "this evening" are parsed effectively to
+  provide accurate datetime objects.
+
+- **Week Numbers**: References like "week 42 of 2023" can be parsed,
+  providing an easy way to handle week-based scheduling.
+
+- **Ordinal Dates**: Phrases like "the third of next month" or "the
+  first Sunday in June" are supported, allowing flexibility with
+  ordinal references.
+
+The module supports both common formats like `mm/dd/yyyy` and
+`dd/mm/yyyy`, with the ability to distinguish based on the
+`month_first` parameter.
+
+Note: If you think a new format should be supported, feel free to ask
+for it, and I will try to add it in a future update.
 
 ### Error Handling
 
-- If the input text is incomplete or not recognizable as a valid date/time, a `ValueError` may be raised.
-- For instance, providing just a day without a month or year (e.g., "15") will raise an error, as it's ambiguous.
+- If the input text is incomplete or not recognizable as a valid
+  date/time, a `ValueError` may be raised.
+- The module tries to handle incomplete dates (for instance, "october"
+  is equivalent to "the first of october of this year"), but very
+  ambiguous cases as "9" are just rejected.
 
 ### Example Usage
 
