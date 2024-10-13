@@ -278,17 +278,45 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return r
 
     @trace
+    def visitDateRelativeMonthWeek(self, ctx:FriendlyDateParser.DateRelativeMonthWeekContext):
+        r = self.visitChildren(ctx)
+        r['rule'] = 'month_week'
+        return r
+
+    @trace
+    def visitDateRelativeYearWeek(self, ctx:FriendlyDateParser.DateRelativeYearWeekContext):
+        r = self.visitChildren(ctx)
+        r['rule'] = 'year_week'
+        return r
+
+    @trace
+    def visitDateRelativeMonthDayPosition(self, ctx:FriendlyDateParser.DateRelativeMonthDayPositionContext):
+        r = self.visitChildren(ctx)
+        r['rule'] = 'month_day_position'
+        return r
+
+    @trace
+    def visitDateRelativeYearDayPosition(self, ctx:FriendlyDateParser.DateRelativeYearDayPositionContext):
+        r = self.visitChildren(ctx)
+        r['rule'] = 'year_day_position'
+        return r
+
+    @trace
     def visitWeekDay(self, ctx:FriendlyDateParser.WeekDayContext):
         return {'weekday': ctx.value}
 
     @trace
-    def visitLast(self, ctx:FriendlyDateParser.LastContext):
+    def visitLastR(self, ctx:FriendlyDateParser.LastRContext):
         return {'modifier': 'last'}
 
     @trace
-    def visitNext_(self, ctx:FriendlyDateParser.Next_Context):
+    def visitNextR(self, ctx:FriendlyDateParser.NextRContext):
         return {'modifier': 'next'}
 
+    @trace
+    def visitThisR(self, ctx:FriendlyDateParser.ThisRContext):
+        return {'modifier': 'this'}
+    
     def _promote_tdn(self, ctx, slot):
         return {slot: self.visitTwoDigitNumber(ctx.twoDigitNumber())}
 
@@ -439,6 +467,15 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             return self._make_date_relative_month(r, now)
         if rule == 'year':
             return self._make_date_relative_year(r, now)
+        if rule == 'month_week':
+            return self._make_date_relative_month_week(r, now)
+        if rule == 'year_week':
+            return self._make_date_relative_year_week(r, now)
+        if rule == 'month_day_position':
+            return self._make_date_relative_month_day_position(r, now)
+        if rule == 'year_day_position':
+            return self._make_date_relative_year_day_position(r, now)
+        raise ValueError(f"Internal error: Invalid rule: {rule}")
 
     def _make_date_relative_day_delta(self, r, now, delta):
         return now + relativedelta(days=delta)
@@ -473,7 +510,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return now + relativedelta(days=delta)
 
     def _make_date_relative_month(self, r, now):
-        year = r.get('year', now.year)
+        year = now.year
         month = r.get('month')
 
         if month is None:
@@ -503,7 +540,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return date(year, month, day)
 
     def _make_date_relative_year(self, r, now):
-        year = r.get('year', now.year)
+        year = now.year
         if r['modifier'] == 'last':
             year -= 1
         elif r['modifier'] == 'next':
@@ -516,6 +553,57 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             day = last_day
 
         return date(year, month, day)
+
+    def _make_date_relative_month_week(self, r, now):
+        if (month := r.get('month')) is None:
+            d = date(now.year, now.month, 1)
+            if r['modifier'] == 'last':
+                d = d - relativedelta(months=1)
+            elif r['modifier'] == 'next':
+                d = d + relativedelta(months=1)
+            r['year'] = d.year
+            r['month'] = d.month
+        else:
+            if r['modifier'] == 'last':
+                if month >= now.month:
+                    r['year'] = now.year - 1
+            elif r['modifier'] == 'next':
+                if month <= now.month:
+                    r['year'] = now.year + 1
+        return self._make_date_absolute_by_week(r)
+
+    def _make_date_relative_year_week(self, r, now):
+        if r['modifier'] == 'last':
+            r['year'] = now.year - 1
+        elif r['modifier'] == 'next':
+            r['year'] = now.year + 1
+        return self._make_date_absolute_by_week(r)
+
+    def _make_date_relative_month_day_position(self, r, now):
+        if (month := r.get('month')) is None:
+            d = date(now.year, now.month, 1)
+            if r['modifier'] == 'last':
+                d = d - relativedelta(months=1)
+            elif r['modifier'] == 'next':
+                d = d + relativedelta(months=1)
+            r['year'] = d.year
+            r['month'] = d.month
+        else:
+            if r['modifier'] == 'last':
+                if month >= now.month:
+                    r['year'] = now.year - 1
+            elif r['modifier'] == 'next':
+                if month <= now.month:
+                    r['year'] = now.year + 1
+        return self._make_date_absolute_by_day_position(r)
+
+    def _make_date_relative_year_day_position(self, r, now):
+        logging.warning(r)
+        if r['modifier'] == 'last':
+            r['year'] = now.year - 1
+        elif r['modifier'] == 'next':
+            r['year'] = now.year + 1
+        return self._make_date_absolute_by_day_position(r)
 
     def _this_monday(self, date):
         return date - relativedelta(days=date.weekday())

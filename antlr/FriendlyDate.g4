@@ -60,6 +60,10 @@ dateRelative
     | dateRelativeMonth
     | dateRelativeYearWithoutMonth
     | dateRelativeYearWithMonth
+    | dateRelativeMonthWeek
+    | dateRelativeYearWeek
+    | dateRelativeMonthDayPosition
+    | dateRelativeYearDayPosition
     ;
 
 today : TODAY ;
@@ -72,19 +76,49 @@ theDayBeforeYesterday : THE DAY BEFORE YESTERDAY ;
 
 theDayAfterTomorrow : THE DAY AFTER TOMORROW ;
 
-dateRelativeDay : (last | next_ | this)? weekDay ;
+dateRelativeDay : (lastR | nextR | thisR)? weekDay ;
 
-dateRelativeWeek : (weekDay OF?)? (last | next_ | this) WEEK ;
+dateRelativeWeek : (weekDay OF?)? (lastR | nextR | thisR) WEEK ;
 
-dateRelativeMonth : (THE? (dayAsOrdinal | lastDay) OF)? (last | next_ | this) (MONTH | monthAsName) ;
+dateRelativeMonth : (THE? (dayAsOrdinal | lastDay) OF)? (lastR | nextR | thisR) (MONTH | monthAsName) ;
 
-dateRelativeYearWithMonth : (THE? (dayAsOrdinal | lastDay) OF)? monthAsName (COMMA|OF)?  (last | next_ | this) YEAR ;
+dateRelativeYearWithMonth : (THE? (dayAsOrdinal | lastDay) OF)? monthAsName (COMMA|OF)?  (lastR | nextR | thisR) YEAR ;
 
-dateRelativeYearWithoutMonth : (THE? lastDay OF)? (last | next_ | this) YEAR ;
+dateRelativeYearWithoutMonth : (THE? lastDay OF)? (lastR | nextR | thisR) YEAR ;
+
+dateRelativeMonthWeek
+    : THE?
+        ( weekDay OF? )?
+        ( weekNumber | lastWeek )
+        OF? (lastR|nextR|thisR) (MONTH | monthAsName)
+    ;
+
+dateRelativeYearWeek
+    : THE?
+        ( weekDay OF? )?
+        ( weekNumber | lastWeek )
+        (OF? monthAsName)?
+        OF? (lastR|nextR|thisR) YEAR
+    ;
+
+dateRelativeMonthDayPosition
+    : THE?
+        ( weekDayPositionOrdinal | weekDayPositionLast | dayPositionNumber )
+        OF? (lastR|nextR|thisR) (MONTH | monthAsName)
+    ;
+
+dateRelativeYearDayPosition
+    : THE?
+        ( weekDayPositionOrdinal | weekDayPositionLast | dayPositionNumber )
+        (OF? monthAsName)?
+        OF? (lastR|nextR|thisR) YEAR
+    ;
+
+lastR : LAST ;
+nextR : NEXT | THIS COMMING ;
+thisR : THIS ;
 
 last : LAST ;
-next_ : NEXT | THIS COMMING ;
-this : THIS ;
 
 dateAbsolute
     : dateMonthAsName
