@@ -6,6 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "friendlydateparser"
 version = "0.1.0"
 description = "A flexible date parsing library that can handle complex natural language expressions, making date manipulation easy and intuitive."
+readme = "README.md"
 authors = [ { name = "Salvador Fandiño García", email = "sfandino@yahoo.com" } ]
 license = { text = "MIT" }
 dependencies = [ "antlr4-python3-runtime >= 4.9",
@@ -14,3 +15,10 @@ keywords = [ "date parsing", "natural language", "calendar", "flexible dates", "
 
 [project.urls]
 Source = "https://github.com/salva/py-friendlydateparser"
+
+[tool.flit.sdist]
+include = [
+    "src/friendlydateparser/antlr/FriendlyDateLexer.py",
+    "src/friendlydateparser/antlr/FriendlyDateParser.py",
+    "src/friendlydateparser/antlr/FriendlyDateVisitor.py",
+]

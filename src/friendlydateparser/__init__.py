@@ -1,5 +1,6 @@
-
-__version__ = "0.1.0"
+"""
+Friendly Date Parser - A Python library for parsing human-readable date and time expressions.
+"""
 
 import friendlydateparser.antlr.FriendlyDateLexer
 

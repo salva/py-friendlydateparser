@@ -34,5 +34,5 @@ install: antlr
 test: antlr
 	$(PYTEST)
 
-upload: test build
+publish: test build
 	$(FLIT) publish

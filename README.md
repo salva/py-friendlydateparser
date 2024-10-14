@@ -1,10 +1,12 @@
-## Module: Date and Time Parsing
+# friendlydateparser
 
 This Python module provides three key methods for parsing text into
 time, date, or datetime objects.
 
 The aim is to be able to accept date expressions that, even if
 complex, are frequently used in everyday life.
+
+## FUNCTIONS
 
 ### `parse_time(text)`
 
