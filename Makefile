@@ -1,7 +1,6 @@
 ANTLR=antlr4
 FLIT=flit
 PYTEST=pytest
-TWINE=twine
 
 GRAMMAR_DIR=antlr
 OUTPUT_DIR=src/friendlydateparser
@@ -35,5 +34,5 @@ install: antlr
 test: antlr
 	$(PYTEST)
 
-upload: build
-	$(TWINE) upload dist/*
+upload: test build
+	$(FLIT) publish
