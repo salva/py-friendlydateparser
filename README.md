@@ -6,7 +6,7 @@ time, date, or datetime objects.
 The aim is to be able to accept date expressions that, even if
 complex, are frequently used in everyday life.
 
-## FUNCTIONS
+## API
 
 ### `parse_time(text)`
 
