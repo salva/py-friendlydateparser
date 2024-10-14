@@ -7,4 +7,5 @@ src/friendlydateparser/antlr/FriendlyDateLexer.py
 src/friendlydateparser/antlr/FriendlyDateListener.py
 src/friendlydateparser/antlr/FriendlyDateParser.py
 src/friendlydateparser/antlr/FriendlyDateVisitor.py
-
+notebooks/
+dist/
