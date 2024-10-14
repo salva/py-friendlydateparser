@@ -72,7 +72,7 @@ formats, including explicit and relative formats.
   # Returns: datetime.datetime(2017, 1, 1, 14, 30)
   ```
 
-### Supported Formats
+## Supported Formats
 
 The module can parse a wide variety of date and time formats,
 including but not limited to:
@@ -115,7 +115,7 @@ The module supports both common formats like `mm/dd/yyyy` and
 Note: If you think a new format should be supported, feel free to ask
 for it, and I will try to add it in a future update.
 
-### Error Handling
+## Error Handling
 
 - If the input text is incomplete or not recognizable as a valid
   date/time, a `ValueError` may be raised.
@@ -124,7 +124,7 @@ for it, and I will try to add it in a future update.
   is equivalent to "the first of october of this year"), but very
   ambiguous cases as "9" are just rejected.
 
-### Example Usage
+## Example Usage
 
 ```python
 from friendlydateparser import parse_date, parse_time, parse_datetime
@@ -142,7 +142,7 @@ datetime_obj = parse_datetime("march 15, 2017 11:59 PM")
 # Returns: datetime.datetime(2017, 3, 15, 23, 59)
 ```
 
-### See Also
+## See Also
 
 - [`datetime`](https://docs.python.org/3/library/datetime.html): For
   working with date and time objects in Python.
@@ -175,7 +175,7 @@ datetime_obj = parse_datetime("march 15, 2017 11:59 PM")
   long time.
 
 
-### License
+## License
 
 Copyright (c) 2024 Salvador Fandiño García
 
