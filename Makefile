@@ -36,3 +36,7 @@ test: antlr
 
 publish: test build
 	$(FLIT) publish
+
+
+test-wheel: build
+	./test-wheel.sh
