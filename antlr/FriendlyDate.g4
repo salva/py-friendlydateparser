@@ -130,8 +130,8 @@ dateAbsolute
     ;
 
 dateMonthAsName
-    : dayAsNumber SEPARATOR? monthAsName (SEPARATOR? yearLong)?
-    | monthAsName SEPARATOR dayAsNumber (SEPARATOR yearLong)?
+    : (weekDay COMMA?)? dayAsNumber SEPARATOR? monthAsName (SEPARATOR? yearLong)?
+    | (weekDay COMMA?)? monthAsName SEPARATOR dayAsNumber (SEPARATOR yearLong)?
     | yearLong SEPARATOR monthAsName SEPARATOR dayAsNumber
     | THE? (dayAsOrdinal | lastDay) OF monthAsName ((COMMA|OF)? yearLong)?
     | monthAsName dayAsNumberOrOrdinal  (','? yearLong)?
@@ -141,7 +141,7 @@ dateMonthAsName
 lastDay : LAST DAY;
 
 dateMonthAsNumber
-    : twoDigitNumberLeft SEPARATOR twoDigitNumberRight (SEPARATOR yearLong)?
+    : (weekDay COMMA?)? twoDigitNumberLeft SEPARATOR twoDigitNumberRight (SEPARATOR yearLong)?
     | yearLong SEPARATOR monthAsNumber SEPARATOR dayAsNumber
     | monthAsNumber SEPARATOR yearLong
     ;

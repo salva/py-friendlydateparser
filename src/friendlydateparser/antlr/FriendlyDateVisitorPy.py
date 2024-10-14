@@ -36,6 +36,8 @@ ordinals = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth',
              'ninety-ninth' ]
 ordinal2number = {ordinal: index + 1 for index, ordinal in enumerate(ordinals)}
 
+weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
 def trace(func):
     if traceme:
         @functools.wraps(func)
@@ -316,7 +318,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
     @trace
     def visitThisR(self, ctx:FriendlyDateParser.ThisRContext):
         return {'modifier': 'this'}
-    
+
     def _promote_tdn(self, ctx, slot):
         return {slot: self.visitTwoDigitNumber(ctx.twoDigitNumber())}
 
@@ -377,7 +379,12 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         elif day == 0 or day > last_day:
             raise ValueError("Invalid date: day value out of range")
 
-        return date(year, month, day)
+        d = date(year, month, day)
+        if (weekday := r.get('weekday')) is not None:
+            if d.weekday() != weekday:
+                raise ValueError(f"Invalid date: weekday value does not match date ({weekdays[weekday]} given but it is a {d.strftime('%A, %d %B %Y')})")
+
+        return d
 
     def _make_date_absolute_by_week(self, r):
         week = r['week']
