@@ -3,7 +3,7 @@
 @echo on
 
 unset PYTHONPATH
-rm -rf dist
+rm -rf test-ve
 python -m venv test-ve
 . test-ve/bin/activate
 pip install dist/*.whl
