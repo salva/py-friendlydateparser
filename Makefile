@@ -2,7 +2,8 @@ FLIT=flit
 PYTEST=pytest
 JAVA ?= java
 
-ANTLR_JAR=antlr-4.13.2-complete.jar
+ANTLR_VERSION=4.13.2
+ANTLR_JAR=antlr-$(ANTLR_VERSION)-complete.jar
 ANTLR_TOOL=$(JAVA) -jar $(ANTLR_JAR)
 
 GRAMMAR_DIR=antlr
@@ -42,6 +43,11 @@ test: antlr
 
 publish: test build
 	$(FLIT) publish
+
+ve:
+	rm -Rf ve
+	python -m venv ve
+	(. ve/bin/activate; pip install antlr4-python3-runtime==$(ANTLR_VERSION))
 
 
 test-wheel: build
