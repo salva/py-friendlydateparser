@@ -1,6 +1,9 @@
-ANTLR=antlr4
 FLIT=flit
 PYTEST=pytest
+JAVA ?= java
+
+ANTLR_JAR=antlr-4.13.2-complete.jar
+ANTLR_TOOL=$(JAVA) -jar $(ANTLR_JAR)
 
 GRAMMAR_DIR=antlr
 OUTPUT_DIR=src/friendlydateparser
@@ -13,9 +16,12 @@ GENERATED= \
 	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/$(GRAMMAR).tokens \
 	$(OUTPUT_DIR)/$(GRAMMAR_DIR)$(GRAMMAR).interp
 
-$(GENERATED): $(GRAMMAR_DIR)/$(GRAMMAR).g4
+$(ANTLR_JAR):
+	curl -O https://www.antlr.org/download/$(ANTLR_JAR)
+
+$(GENERATED): $(GRAMMAR_DIR)/$(GRAMMAR).g4 $(ANTLR_JAR)
 	mkdir -p $(OUTPUT_DIR)
-	$(ANTLR) -Dlanguage=Python3 -o $(OUTPUT_DIR) $(GRAMMAR_DIR)/$(GRAMMAR).g4 -visitor
+	$(ANTLR_TOOL) -Dlanguage=Python3 -o $(OUTPUT_DIR) $(GRAMMAR_DIR)/$(GRAMMAR).g4 -visitor
 
 antlr: $(GENERATED)
 

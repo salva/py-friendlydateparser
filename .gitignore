@@ -10,3 +10,4 @@ src/friendlydateparser/antlr/FriendlyDateVisitor.py
 notebooks/
 dist/
 test-ve/
+antlr-*-complete.jar
