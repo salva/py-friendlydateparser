@@ -1,7 +1,7 @@
 FLIT ?= flit
 JAVA ?= java
 CURL ?= curl
-PYHTON ?= python
+PYTHON ?= python
 
 PYTEST=pytest
 
@@ -20,17 +20,17 @@ GENERATED= \
 	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/$(GRAMMAR).tokens \
 	$(OUTPUT_DIR)/$(GRAMMAR_DIR)$(GRAMMAR).interp
 
-$(ANTLR_JAR):
-	$(CURL) -O https://www.antlr.org/download/$(ANTLR_JAR)
-
 $(GENERATED): $(GRAMMAR_DIR)/$(GRAMMAR).g4 $(ANTLR_JAR)
 	mkdir -p $(OUTPUT_DIR)
 	$(ANTLR_TOOL) -Dlanguage=Python3 -o $(OUTPUT_DIR) $(GRAMMAR_DIR)/$(GRAMMAR).g4 -visitor
 
+$(ANTLR_JAR):
+	$(CURL) -O https://www.antlr.org/download/$(ANTLR_JAR)
+
 antlr: $(GENERATED)
 
-dist-clean: clean
-	rm -rf dist/ build/ *.egg-info $(GENERATED)
+dist-clean:
+	rm -rf dist/ build/ *.egg-info $(GENERATED) ve/ test-ve/
 
 build: antlr
 	$(FLIT) build
@@ -47,7 +47,7 @@ publish: test build
 ve:
 	rm -Rf ve
 	$(PYTHON) -m venv ve
-	(. ve/bin/activate; pip install antlr4-python3-runtime==$(ANTLR_VERSION))
+	(. ve/bin/activate; pip install antlr4-python3-runtime==$(ANTLR_VERSION) pytest python-dateutil)
 
 test-wheel: build
 	./test-wheel.sh
