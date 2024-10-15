@@ -1,6 +1,6 @@
 import pytest
-from friendlydateparser import parse_date, parse_time, parse_datetime
-from datetime import datetime, timedelta
+from friendlydateparser import parse_datetime
+from datetime import datetime, timedelta, timezone
 
 now = "2023-10-12"
 
@@ -19,7 +19,14 @@ datetimes = [
     ("march 31", "2023-03-31T00:00:00.000000", "OK"),
     ("october 2020", "2020-10-01T00:00:00.000000", "OK"),
     ("jul 3rd at noon", "2023-07-03T12:00:00.000000", "OK"),
-    ("2999 at 3:00:00.000000", "2999-01-01T03:00:00.000000", "OK")
+    ("2999 at 3:00:00.000000", "2999-01-01T03:00:00.000000", "OK"),
+    ("2h ago", "2023-10-11T22:00:00.000000", "OK"),
+    ("1h 1s ago", "2023-10-11T22:59:59.000000", "OK"),
+    ("1h -1s ago", "2023-10-11T23:00:01.000000", "OK"),
+    ("1h 0.1s ago", "2023-10-11T22:59:59.900000", "OK"),
+    ("1h -0.1s ago", "2023-10-11T23:00:00.100000", "OK"),
+    ("2 days after today at 1:00pm CEST", "2023-10-14T11:00:00.000000", "OK"),
+    ("1 october 12:00 EST", "2023-10-01T17:00:00.000000", "OK"),
 ]
 
 @pytest.mark.parametrize("input_text, expected, tag", datetimes)
@@ -31,6 +38,8 @@ def test_datetimes(input_text, expected, tag):
         with pytest.raises(expected):
             parse_datetime(input_text, now=now)
     else:
-        result = parse_datetime(input_text, now=now)
+        result = parse_datetime(input_text, now=now, default_tz='UTC')
+        result = result.astimezone(timezone.utc)
+
         result = result.strftime('%Y-%m-%dT%H:%M:%S.%f')
         assert result == expected, f"Wrong parsed datetime, input: '{input_text}', parsed: '{result}', expected: '{expected}'"

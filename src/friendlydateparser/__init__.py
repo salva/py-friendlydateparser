@@ -33,7 +33,7 @@ def _resolve_month_first(month_first):
         return date_format.startswith('%m')
     return month_first
 
-def _parse_anything(text, what, now=None, month_first=True):
+def _parse_anything(text, what, now=None, month_first=True, default_tz=None):
 
     now = _resolve_now(now)
     month_first = _resolve_month_first(month_first)
@@ -48,8 +48,6 @@ def _parse_anything(text, what, now=None, month_first=True):
 
     if what == "date":
         tree = parser.friendlyDate()
-    elif what == "time":
-        tree = parser.friendlyTime()
     elif what == "datetime":
         tree = parser.friendlyDateTime()
     else:
@@ -58,17 +56,14 @@ def _parse_anything(text, what, now=None, month_first=True):
     if error_listener.count > 0:
         raise ValueError(f"Invalid {what} '{text}', {error_listener.first_error()}, partial result: {tree.toStringTree(recog=parser)}")
 
-    visitor = FriendlyDateVisitorPy(now=now, month_first=month_first)
+    visitor = FriendlyDateVisitorPy(now=now, month_first=month_first, default_tz=default_tz)
     return visitor.visit(tree)
-
-def parse_time(text):
-    return _parse_anything(text, "time")
 
 def parse_date(text, now=None, month_first=True):
     return _parse_anything(text, "date", now=now, month_first=month_first)
 
-def parse_datetime(text, now=None, month_first=True):
-    return _parse_anything(text, "datetime", now=now, month_first=month_first)
+def parse_datetime(text, now=None, month_first=True, default_tz=None):
+    return _parse_anything(text, "datetime", now=now, month_first=month_first, default_tz=default_tz)
 
 class _ErrorListener(ErrorListener):
     def __init__(self):

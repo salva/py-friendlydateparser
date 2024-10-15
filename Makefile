@@ -11,18 +11,20 @@ ANTLR_TOOL=$(JAVA) -jar $(ANTLR_JAR)
 
 GRAMMAR_DIR=antlr
 OUTPUT_DIR=src/friendlydateparser
-GRAMMAR=FriendlyDate
 
 GENERATED= \
-	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/$(GRAMMAR)Visitor.py \
-	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/$(GRAMMAR)Lexer.py \
-	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/$(GRAMMAR)Parser.py \
-	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/$(GRAMMAR).tokens \
-	$(OUTPUT_DIR)/$(GRAMMAR_DIR)$(GRAMMAR).interp
+	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/FriendlyDateVisitor.py \
+	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/FriendlyDateLexer.py \
+	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/FriendlyDateParser.py \
+	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/FriendlyDate.tokens \
+	$(OUTPUT_DIR)/$(GRAMMAR_DIR)/FriendlyDate.interp
 
-$(GENERATED): $(GRAMMAR_DIR)/$(GRAMMAR).g4 $(ANTLR_JAR)
+$(GENERATED): $(GRAMMAR_DIR)/FriendlyDate.g4 $(GRAMMAR_DIR)/Timezone.g4 $(ANTLR_JAR)
 	mkdir -p $(OUTPUT_DIR)
-	$(ANTLR_TOOL) -Dlanguage=Python3 -o $(OUTPUT_DIR) $(GRAMMAR_DIR)/$(GRAMMAR).g4 -visitor
+	$(ANTLR_TOOL) -Dlanguage=Python3 -o $(OUTPUT_DIR) $(GRAMMAR_DIR)/FriendlyDate.g4 -visitor
+
+$(GRAMMAR_DIR)/Timezone.g4:
+	$(PYTHON) make_timezone_grammar.py > $(GRAMMAR_DIR)/Timezone.g4
 
 $(ANTLR_JAR):
 	$(CURL) -O https://www.antlr.org/download/$(ANTLR_JAR)
@@ -47,7 +49,7 @@ publish: test build
 ve:
 	rm -Rf ve
 	$(PYTHON) -m venv ve
-	(. ve/bin/activate; pip install antlr4-python3-runtime==$(ANTLR_VERSION) pytest python-dateutil)
+	(. ve/bin/activate; pip install antlr4-python3-runtime==$(ANTLR_VERSION) pytest python-dateutil pytz)
 
 test-wheel: build
 	./test-wheel.sh

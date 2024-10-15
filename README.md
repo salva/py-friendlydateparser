@@ -3,8 +3,8 @@
 This Python module provides three key methods for parsing text into
 time, date, or datetime objects.
 
-The aim is to be able to accept date expressions that, even if
-complex, are frequently used in everyday life.
+The aim is to be able to accept natural language date expressions
+that, even if complex, are frequently used in everyday life.
 
 ## API
 
@@ -174,6 +174,11 @@ datetime_obj = parse_datetime("march 15, 2017 11:59 PM")
   dates. Note that as of October 2024, it has not been updated for a
   long time.
 
+- [`Arrow`](https://arrow.readthedocs.io/en/latest/): A `datetime`
+  alternative with a focus on usability. The
+  [`dehumanize`](https://arrow.readthedocs.io/en/latest/guide.html#dehumanize)
+  feature allows one to parse time deltas expressed in natural
+  language.
 
 ## License
 

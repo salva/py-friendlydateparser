@@ -1,43 +1,72 @@
 grammar FriendlyDate;
 
+import Timezone;
+
 friendlyDateTime : dateTime EOF ;
 
-dateTime : date (AT? time)? ;
+dateTime
+    : (dateTimeDelta (BEFORE|AFTER))? (date (AT? time)? anyTz? | now)
+    | dateTimeDelta ago
+    ;
 
-friendlyDate : date EOF ;
+now : NOW ;
 
-friendlyTime : time EOF ;
+anyTz : tz | tzAbbreviation ;
+tz : TIMEZONE ;
+tzAbbreviation: TIMEZONE_ABBREVIATION ;
+
+friendlyDate : dateAlone EOF ;
+
+dateAlone
+    : (dateDelta (before|after))? date
+    | dateDelta ago
+    ;
+
+before : BEFORE ;
+after : AFTER ;
+ago : AGO ;
 
 time
     : timeAbsolute
     | midnight
     | noon
-    | timeNow
     ;
 
 midnight : MIDNIGHT ;
 
 noon : NOON | MIDDAY ;
 
-timeNow : NOW ;
+dateDelta
+    : (yearsDelta | monthsDelta | weeksDelta |daysDelta )
+        (COMMA? (yearsDelta | monthsDelta | weeksDelta | daysDelta ))*
+    ;
+
+dateTimeDelta
+    : (yearsDelta | monthsDelta | weeksDelta | daysDelta | hoursDelta | minutesDelta | secondsDelta)
+        (COMMA? (yearsDelta | monthsDelta | weeksDelta | daysDelta | hoursDelta | minutesDelta | secondsDelta))*
+    ;
+
+yearsDelta : zNumber (YEAR | YEARS) ;
+monthsDelta : zNumber (MONTH | MONTHS) ;
+weeksDelta : zNumber (WEEK | WEEKS) ;
+daysDelta : zNumber (DAY | DAYS) ;
+
+hoursDelta : zNumber HOURS ;
+minutesDelta : zNumber MINUTES ;
+secondsDelta : qNumber (SECOND | SECONDS) ;
 
 timeAbsolute
     : hour COLON minute (COLON second)? amPm?
-    | hour H ( minute M (second (S|SECOND))? )? amPm?
+    | hour HOURS ( minute MINUTES (second (SECONDS|SECOND))? )? amPm?
     ;
 
 hour : twoDigitNumber ;
 
 minute : twoDigitNumber ;
 
-second
-    : twoDigitFloatNumber
-    ;
+second : twoDigitFloatNumber ;
 
-twoDigitFloatNumber
-    : TWO_DIGIT_NUMBER
-    | TWO_DIGIT_FLOAT_NUMBER
-    ;
+twoDigitFloatNumber : TWO_DIGIT_NUMBER | TWO_DIGIT_FLOAT_NUMBER ;
 
 amPm : am | pm ;
 
@@ -130,20 +159,20 @@ dateAbsolute
     ;
 
 dateMonthAsName
-    : (weekDay COMMA?)? dayAsNumber SEPARATOR? monthAsName (SEPARATOR? yearLong)?
-    | (weekDay COMMA?)? monthAsName SEPARATOR dayAsNumber (SEPARATOR yearLong)?
-    | yearLong SEPARATOR monthAsName SEPARATOR dayAsNumber
+    : (weekDay COMMA?)? dayAsNumber separator? monthAsName (separator? yearLong)?
+    | (weekDay COMMA?)? monthAsName separator dayAsNumber (separator yearLong)?
+    | yearLong separator monthAsName separator dayAsNumber
     | THE? (dayAsOrdinal | lastDay) OF monthAsName ((COMMA|OF)? yearLong)?
     | monthAsName dayAsNumberOrOrdinal  (','? yearLong)?
-    | monthAsName (SEPARATOR? yearLong)?
+    | monthAsName (separator? yearLong)?
     ;
 
 lastDay : LAST DAY;
 
 dateMonthAsNumber
-    : (weekDay COMMA?)? twoDigitNumberLeft SEPARATOR twoDigitNumberRight (SEPARATOR yearLong)?
-    | yearLong SEPARATOR monthAsNumber SEPARATOR dayAsNumber
-    | monthAsNumber SEPARATOR yearLong
+    : (weekDay COMMA?)? twoDigitNumberLeft separator twoDigitNumberRight (separator yearLong)?
+    | yearLong separator monthAsNumber separator dayAsNumber
+    | monthAsNumber separator yearLong
     ;
 
 dateWithWeek
@@ -151,14 +180,14 @@ dateWithWeek
         ( weekDay OF? )?
         ( weekNumber
             (OF?
-                ( monthAsNameOrNumber SEPARATOR yearLong
+                ( monthAsNameOrNumber separator yearLong
                 | monthAsName (OF? yearLong)?
                 | yearLong
                 )
             )?
         | lastWeek
             (OF?
-                ( monthAsNameOrNumber SEPARATOR yearLong
+                ( monthAsNameOrNumber separator yearLong
                 | monthAsName (OF? yearLong)?
                 | yearLong
                 )
@@ -170,7 +199,7 @@ dateWithDayPosition
     : THE?
         (weekDayPositionOrdinal | weekDayPositionLast | dayPositionNumber)
         (OF?
-            ( monthAsNameOrNumber SEPARATOR yearLong
+            ( monthAsNameOrNumber separator yearLong
             | monthAsName (OF? yearLong)?
             | yearLong
             )
@@ -234,6 +263,12 @@ fourDigitNumber : FOUR_DIGIT_NUMBER ;
 
 twoDigitNumber : TWO_DIGIT_NUMBER ;
 
+zNumber : (MINUS|PLUS)? anyDigitNumber ;
+
+qNumber : (MINUS|PLUS)? anyFloatNumber ;
+
+anyFloatNumber : TWO_DIGIT_FLOAT_NUMBER | ANY_DIGIT_FLOAT_NUMBER | anyDigitNumber;
+
 anyDigitNumber : TWO_DIGIT_NUMBER | FOUR_DIGIT_NUMBER | EIGHT_DIGIT_NUMBER | ANY_DIGIT_NUMBER ;
 
 // threeDigitNumber : TWO_DIGIT_NUMBER | THREE_DIGIT_NUMBER ;
@@ -248,9 +283,13 @@ weekDay returns [value]
     | SUN {$value = 6;}
     ;
 
+separator : MINUS | SLASH;
+
 fragment DIGIT : [0-9] ;
 
 TWO_DIGIT_FLOAT_NUMBER : DIGIT? DIGIT '.' DIGIT* ;
+
+ANY_DIGIT_FLOAT_NUMBER : DIGIT+ '.' DIGIT* ;
 
 TWO_DIGIT_NUMBER : DIGIT DIGIT? ;
 
@@ -291,6 +330,7 @@ TODAY : 'today';
 TOMORROW : 'tomorrow';
 YESTERDAY : 'yesterday';
 NOW : 'now';
+AGO : 'ago';
 
 COMMA : ',';
 COLON : ':';
@@ -307,9 +347,9 @@ BEFORE : 'before';
 
 SECOND: 'second';
 
-H: 'h' ('r' | 'ours')? 's'?;
-M: 'm' ('in' | 'inute')? 's'?;
-S: 's' 'ec'? 's'? | 'seconds';
+HOURS: 'h' ('r' | 'ours')? 's'?;
+MINUTES: 'm' ('in' | 'inute')? 's'?;
+SECONDS: 's' 'ec'? 's'? | 'seconds';
 
 AM : 'am';
 PM : 'pm';
@@ -325,6 +365,12 @@ DAY : 'day';
 WEEK : 'week';
 MONTH : 'month';
 YEAR : 'year';
+
+
+YEARS : 'y' | 'ys' | 'years' ;
+MONTHS : 'mo' | 'mos'| 'months' ;
+WEEKS : 'w' | 'ws' | 'weeks' ;
+DAYS : 'd' | 'ds' | 'days' ;
 
 ORDINAL_DIGITS
     : ([1-9][0-9]?)? '1st'
@@ -346,6 +392,8 @@ ORDINAL_WORDS
         ('first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth' | 'ninth')
     ;
 
-SEPARATOR : '/' | '-';
+PLUS : '+';
+MINUS : '-';
+SLASH : '/';
 
 WS : [ \t\r\n]+ -> skip ;

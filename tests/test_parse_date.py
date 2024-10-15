@@ -111,6 +111,9 @@ dates = [
     ("2nd saturday next september", "2024-09-14", "OK"),
     ("3rd sunday this year", "2023-01-15", "OK"),
     ("wed week 2 april last year", "2022-04-13", "OK"),
+    ("3 days before the last week of 2012", "2012-12-21", "OK"),
+    ("1 month after january 30", "2023-02-28", "OK"),
+    ("2 weeks -1d before 2023-10-12", "2023-09-29", "OK"),
 ]
 
 @pytest.mark.parametrize("input_text, expected, tag", dates)

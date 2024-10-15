@@ -3,9 +3,12 @@ from .FriendlyDateParser import FriendlyDateParser
 import functools
 from datetime import datetime, time, date, timedelta
 from dateutil.relativedelta import relativedelta
+import pytz
 from calendar import monthrange
 import logging
 import os
+
+from friendlydateparser.tz_abbreviations import tz_abbreviations
 
 traceme = True or os.environ.get("FRIENDLYDATEPARSER_TRACE", "0") == "1"
 
@@ -38,26 +41,34 @@ ordinal2number = {ordinal: index + 1 for index, ordinal in enumerate(ordinals)}
 
 weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
+def tz_abbreviation2pytz(abv):
+    offset = tz_abbreviations[abv.upper()]
+    return pytz.FixedOffset(offset)
+
 def trace(func):
     if traceme:
         @functools.wraps(func)
         def wrapper(self, ctx, *args, **kwargs):
             tree = ctx.toStringTree(recog=ctx.parser) if ctx else "None"
             logging.debug(f">>> method call {func.__name__}({tree})...")
-            result = func(self, ctx, *args, **kwargs)
-            logging.debug(f"<<<  method call {func.__name__}({tree}) ---> {result}")
-            return result
+            try:
+                result = func(self, ctx, *args, **kwargs)
+                logging.debug(f"<<<  method call {func.__name__}({tree}) ---> {result}")
+                return result
+            except Exception as e:
+                logging.exception(f"<<<  method call {func.__name__}({tree}) EXCEPTION!")
+                raise
         return wrapper
     else:
         return func
 
-
 class FriendlyDateVisitorPy(FriendlyDateVisitor):
-    def __init__(self, now, month_first):
+    def __init__(self, now, month_first, default_tz):
         if not isinstance(now, datetime):
             raise ValueError(f"now must be a datetime object instead of one with type {type(now).__name__}")
         self._now = now
         self._month_first = month_first
+        self._default_tz = default_tz
         self._left_slot = 'month' if month_first else 'day'
         self._right_slot = 'day' if month_first else 'month'
 
@@ -66,6 +77,8 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             return aggregate
         if isinstance(aggregate, dict) and isinstance(nextResult, dict):
             return {**aggregate, **nextResult} # shallow merge!
+        if isinstance(aggregate, list) and isinstance(nextResult, list):
+            return aggregate + nextResult
         return nextResult
 
     # @trace
@@ -80,11 +93,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             logging.exception(e)
             raise ValueError(f"Error parsing {ctx.toStringTree(recog=ctx.parser)}") from e
 
-
-    @trace
-    def visitFriendlyTime(self, ctx:FriendlyDateParser.FriendlyTimeContext):
-        return self.visitChildren(ctx)['time']
-
     @trace
     def visitFriendlyDate(self, ctx:FriendlyDateParser.FriendlyDateContext):
         return self.visitChildren(ctx)['date']
@@ -94,11 +102,15 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return self.visitChildren(ctx)['datetime']
 
     @trace
-    def visitTime(self, ctx:FriendlyDateParser.FriendlyTimeContext):
+    def visitNow(self, ctx:FriendlyDateParser.NowContext):
+        return {'datetime': self._now}
+
+    @trace
+    def visitTime(self, ctx:FriendlyDateParser.TimeContext):
         return {'time': self._make_time(self.visitChildren(ctx))}
 
     @trace
-    def visitDateRelativeByDate(self, ctx:FriendlyDateParser.FriendlyDateContext):
+    def visitDateRelativeByDate(self, ctx:FriendlyDateParser.DateRelativeByDateContext):
         return {'date': self._make_date_relative(self.visitChildren(ctx))}
 
     @trace
@@ -106,8 +118,20 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return {'date': self._make_date_absolute(self.visitChildren(ctx))}
 
     @trace
+    def visitDateAlone(self, ctx:FriendlyDateParser.DateAloneContext):
+        return {'date': self._make_date_alone(self.visitChildren(ctx))}
+
+    @trace
     def visitDateTime(self, ctx:FriendlyDateParser.FriendlyDateTimeContext):
         return {'datetime': self._make_datetime(self.visitChildren(ctx))}
+
+    @trace
+    def visitTz(self, ctx:FriendlyDateParser.TzContext):
+        return {'tz': pytz.timezone(ctx.getText())}
+
+    @trace
+    def visitTzAbbreviation(self, ctx:FriendlyDateParser.TzAbbreviationContext):
+        return {'tz': tz_abbreviation2pytz(ctx.getText())}
 
     @trace
     def visitLastDay(self, ctx:FriendlyDateParser.LastDayContext):
@@ -143,6 +167,43 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             return (int(a), int(b[:6]))
         else:
             raise ValueError("Internal error parsing seconds")
+
+    @trace
+    def visitDateTimeDelta(self, ctx:FriendlyDateParser.DateTimeDeltaContext):
+        return {'datetime_delta': self._make_datetime_delta(self.visitChildren(ctx))}
+
+    @trace
+    def visitDateDelta(self, ctx:FriendlyDateParser.DateDeltaContext):
+        return {'date_delta': self._make_datetime_delta(self.visitChildren(ctx))}
+
+    @trace
+    def visitYearsDelta(self, ctx:FriendlyDateParser.YearsDeltaContext):
+        return [{'years': self.visitZNumber(ctx.zNumber())}]
+
+    @trace
+    def visitMonthsDelta(self, ctx:FriendlyDateParser.MonthsDeltaContext):
+        return [{'months': self.visitZNumber(ctx.zNumber())}]
+
+    @trace
+    def visitWeeksDelta(self, ctx:FriendlyDateParser.WeeksDeltaContext):
+        return [{'weeks': self.visitZNumber(ctx.zNumber())}]
+
+    @trace
+    def visitDaysDelta(self, ctx:FriendlyDateParser.DaysDeltaContext):
+        return [{'days': self.visitZNumber(ctx.zNumber())}]
+
+    @trace
+    def visitHoursDelta(self, ctx:FriendlyDateParser.HoursDeltaContext):
+        return [{'hours': self.visitZNumber(ctx.zNumber())}]
+
+    @trace
+    def visitMinutesDelta(self, ctx:FriendlyDateParser.MinutesDeltaContext):
+        return [{'minutes': self.visitZNumber(ctx.zNumber())}]
+
+    @trace
+    def visitSecondsDelta(self, ctx:FriendlyDateParser.SecondsDeltaContext):
+        a, b = self.visitQNumber(ctx.qNumber())
+        return [{'seconds': a, 'microseconds': b}]
 
     @trace
     def visitAm(self, ctx:FriendlyDateParser.AmContext):
@@ -214,12 +275,38 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return self._promote_tdn(ctx, 'day')
 
     @trace
+    def visitZNumber(self, ctx:FriendlyDateParser.ZNumberContext):
+        v = self.visitAnyDigitNumber(ctx.anyDigitNumber())
+        logging.debug(f"ZNumber: {v}")
+        return -v if ctx.MINUS() else v
+
+    @trace
+    def visitAnyDigitNumber(self, ctx:FriendlyDateParser.AnyDigitNumberContext):
+        return int(ctx.getText())
+
+    @trace
     def visitTwoDigitNumber(self, ctx:FriendlyDateParser.TwoDigitNumberContext):
         return int(ctx.TWO_DIGIT_NUMBER().getText())
 
     @trace
     def visitFourDigitNumber(self, ctx:FriendlyDateParser.FourDigitNumberContext):
         return int(ctx.FOUR_DIGIT_NUMBER().getText())
+
+    @trace
+    def visitQNumber(self, ctx:FriendlyDateParser.QNumberContext):
+        a, b = self.visitAnyFloatNumber(ctx.anyFloatNumber())
+        if ctx.MINUS():
+            return (-a, -b)
+        return (a, b)
+
+    @trace
+    def visitAnyFloatNumber(self, ctx:FriendlyDateParser.AnyFloatNumberContext):
+        if (c := ctx.anyDigitNumber()):
+            return self.visitAnyDigitNumber(c), 0
+        c = ctx.ANY_DIGIT_FLOAT_NUMBER() or ctx.TWO_DIGIT_FLOAT_NUMBER()
+        a, b = c.getText().split('.')
+        b += "000000"
+        return int(a), int(b[:6])
 
     @trace
     def visitTwoDigitFloatNumber(self, ctx:FriendlyDateParser.TwoDigitFloatNumberContext):
@@ -230,8 +317,16 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return (int(a), int(b[:6]))
 
     @trace
+    def visitBefore(self, ctx:FriendlyDateParser.BeforeContext):
+        return {'delta_before': True}
+
+    @trace
+    def visitAgo(self, ctx:FriendlyDateParser.AgoContext):
+        return {'delta_before': True}
+
+    @trace
     def visitToday(self, ctx:FriendlyDateParser.TodayContext):
-        return {'rule': today, 'delta': 0}
+        return {'rule': 'today', 'delta': 0}
 
     @trace
     def visitTomorrow(self, ctx:FriendlyDateParser.TomorrowContext):
@@ -455,11 +550,53 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
             raise ValueError("Invalid date: day ordinal out of range")
         return d
 
-    def _make_datetime(self, r):
-        date = r['date']
-        time = r.get('time', datetime.min.time())
-        return datetime.combine(date, time)
+    def _make_datetime_delta(self, l):
+        r = { 'years': 0, 'months': 0, 'weeks': 0, 'days': 0,
+              'hours': 0, 'minutes': 0, 'seconds': 0, 'microseconds': 0 }
+        for d in l:
+            for k, v in d.items():
+                logging.debug(f"Adding on {k}: {r[k]} + {v}")
+                r[k] += v
+        return relativedelta(**r)
 
+    def _make_date_alone(self, r):
+        logging.debug(f"make_date_alone: {r}")
+        d = r.get('date', self._now.date())
+        if (delta := r.get('date_delta')) is None:
+            return d
+
+        if r.get('delta_before', False):
+            logging.debug(f"Subtracting {delta} from {d}")
+            d -= delta
+        else:
+            logging.debug(f"Subtracting {delta} from {d}")
+            d += delta
+
+        logging.debug(f"make_date_alone --> {d} ({type(d)})")
+        return d
+
+    def _make_datetime(self, r):
+        logging.debug(f"make_datetime: {r}")
+        if (d := r.get('date')) is None:
+            d = self._now
+        else:
+            t = r.get('time', datetime.min.time())
+            d = datetime.combine(d, t)
+        if (delta := r.get('datetime_delta')) is not None:
+            if r.get('delta_before', False):
+                d -= delta
+            else:
+                d += delta
+
+        if (tz := r.get('tz')) is not None:
+            d = tz.localize(d)
+        elif (tz := self._default_tz) is not None:
+            if isinstance(tz, str):
+                tz = pytz.timezone(tz)
+            d = tz.localize(d)
+
+        logging.debug(f"make_datetime: {d} ({type(d)})")
+        return d
 
     def _make_date_relative(self, r):
         now = r.get('date', self._now.date())
