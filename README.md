@@ -176,8 +176,7 @@ datetime_obj = parse_datetime("march 15, 2017 11:59 PM")
 
 - [`dateparser`](https://dateparser.readthedocs.io/en/latest/): A
   library similar to this module, which parses natural language
-  dates. Note that as of October 2024, it has not been updated for a
-  long time.
+  dates, even supporting multiple languages.
 
 - [`Arrow`](https://arrow.readthedocs.io/en/latest/): A `datetime`
   alternative with a focus on usability. The
