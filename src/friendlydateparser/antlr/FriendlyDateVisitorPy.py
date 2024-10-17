@@ -110,6 +110,30 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return {'time': self._make_time(self.visitChildren(ctx))}
 
     @trace
+    def visitIso8601Time(self, ctx:FriendlyDateParser.Iso8601TimeContext):
+        return {'time': self._make_time(self.visitChildren(ctx))}
+
+    @trace
+    def visitIso8601Month(self, ctx:FriendlyDateParser.Iso8601MonthContext):
+        return {'month': self.visitNumber2(ctx.number2())}
+
+    @trace
+    def visitIso8601YearWeek(self, ctx:FriendlyDateParser.Iso8601YearWeekContext):
+        return { 'week': self.visitNumber2(ctx.number2()) }
+
+    @trace
+    def visitIso8601WeekDay(self, ctx:FriendlyDateParser.Iso8601WeekDayContext):
+        return { 'weekday': self.visitNumber1(ctx.number1()) - 1 }
+
+    @trace
+    def visitIso8601YearDay(self, ctx:FriendlyDateParser.Iso8601YearDayContext):
+        return { 'day_position': self.visitNumber3(ctx.number3()) }
+
+    @trace
+    def visitIso8601MonthDay(self, ctx:FriendlyDateParser.Iso8601MonthDayContext):
+        return { 'day': self.visitNumber2(ctx.number2()) }
+
+    @trace
     def visitDateRelativeByDate(self, ctx:FriendlyDateParser.DateRelativeByDateContext):
         return {'date': self._make_date_relative(self.visitChildren(ctx))}
 
@@ -120,6 +144,11 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
     @trace
     def visitDateAlone(self, ctx:FriendlyDateParser.DateAloneContext):
         return {'date': self._make_date_alone(self.visitChildren(ctx))}
+
+
+    @trace
+    def visitIso8601Date(self, ctx:FriendlyDateParser.Iso8601DateContext):
+        return {'date': self._make_date_absolute(self.visitChildren(ctx))}
 
     @trace
     def visitDateTime(self, ctx:FriendlyDateParser.FriendlyDateTimeContext):
@@ -132,6 +161,14 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
     @trace
     def visitTzAbbreviation(self, ctx:FriendlyDateParser.TzAbbreviationContext):
         return {'tz': tz_abbreviation2pytz(ctx.getText())}
+
+    @trace
+    def visitTzOffset(self, ctx:FriendlyDateParser.TzOffsetContext):
+        r = self.visitChildren(ctx)
+        offset = r['hour']*60 + r.get('minute', 0)
+        if ctx.DASH():
+            offset = -offset
+        return {'tz': pytz.FixedOffset(offset)}
 
     @trace
     def visitLastDay(self, ctx:FriendlyDateParser.LastDayContext):
@@ -150,23 +187,30 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return {'hour': 12, 'minute': 0, 'second': 0, 'microsecond': 0}
 
     @trace
-    def visitHour(self, ctx:FriendlyDateParser.HourContext):
-        return self._promote_tdn(ctx, 'hour')
+    def visitHour2(self, ctx:FriendlyDateParser.Hour2Context):
+        return {'hour': self.visitNumber2(ctx.number2())}
 
     @trace
-    def visitMinute(self, ctx:FriendlyDateParser.MinuteContext):
-        return self._promote_tdn(ctx, 'minute')
+    def visitHour12(self, ctx:FriendlyDateParser.Hour12Context):
+        return {'hour': self.visitNumber12(ctx.number12())}
 
     @trace
-    def visitSecond(self, ctx:FriendlyDateParser.SecondContext):
-        if (c := ctx.TWO_DIGIT_NUMBER()):
-            return (int(c.getText()), 0)
-        if (c := ctx.SECONDS_FLOAT_NUMBER()):
-            a, b = c.getText().split('.')
-            b += '000000'
-            return (int(a), int(b[:6]))
-        else:
-            raise ValueError("Internal error parsing seconds")
+    def visitMinute2(self, ctx:FriendlyDateParser.Minute2Context):
+        return {'minute': self.visitNumber2(ctx.number2())}
+
+    @trace
+    def visitMinute12(self, ctx:FriendlyDateParser.Minute12Context):
+        return {'minute': self.visitNumber12(ctx.number12())}
+
+    @trace
+    def visitSecond2(self, ctx:FriendlyDateParser.Second2Context):
+        a, b = self.visitFloat2(ctx.float2())
+        return {'second': a, 'microsecond': b}
+
+    @trace
+    def visitSecond12(self, ctx:FriendlyDateParser.Second12Context):
+        a, b = self.visitFloat12(ctx.float12())
+        return {'second': a, 'microsecond': b}
 
     @trace
     def visitDateTimeDelta(self, ctx:FriendlyDateParser.DateTimeDeltaContext):
@@ -214,21 +258,16 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return {'pm': True}
 
     @trace
-    def visitTwoDigitNumberLeft(self, ctx:FriendlyDateParser.TwoDigitNumberLeftContext):
-        return self._promote_tdn(ctx, self._left_slot)
+    def visitNumber12Left(self, ctx:FriendlyDateParser.Number12LeftContext):
+        return {self._left_slot: self.visitNumber12(ctx.number12())}
 
     @trace
-    def visitTwoDigitNumberRight(self, ctx:FriendlyDateParser.TwoDigitNumberRightContext):
-        return self._promote_tdn(ctx, self._right_slot)
+    def visitNumber12Right(self, ctx:FriendlyDateParser.Number12RightContext):
+        return {self._right_slot: self.visitNumber12(ctx.number12())}
 
     @trace
-    def visitSecond(self, ctx:FriendlyDateParser.SecondContext):
-        (a, b) = self.visitTwoDigitFloatNumber(ctx.twoDigitFloatNumber())
-        return {'second': a, 'microsecond': b}
-
-    @trace
-    def visitYearLong(self, ctx:FriendlyDateParser.YearLongContext):
-        return {'year': self.visitFourDigitNumber(ctx.fourDigitNumber())}
+    def visitYear4(self, ctx:FriendlyDateParser.Year4Context):
+        return {'year': self.visitNumber4(ctx.number4())}
 
     @trace
     def visitMonthAsName(self, ctx:FriendlyDateParser.MonthAsNameContext):
@@ -236,11 +275,15 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
 
     @trace
     def visitMonthAsNumber(self, ctx:FriendlyDateParser.MonthAsNumberContext):
-        return self._promote_tdn(ctx, 'month')
+        return {'month': self.visitNumber12(ctx.number12())}
 
     @trace
     def visitWeekNumber(self, ctx:FriendlyDateParser.WeekNumberContext):
-        return self._promote_tdn(ctx, 'week')
+        return {'week': self.visitNumber12(ctx.number12())}
+
+    @trace
+    def visitWeekDay(self, ctx:FriendlyDateParser.WeekDayContext):
+        return { 'weekday': self.visitOneDigitNumber(ctx.oneDigitNumber()) }
 
     @trace
     def visitDayAsOrdinal(self, ctx:FriendlyDateParser.DayAsOrdinalContext):
@@ -261,7 +304,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return r
 
     @trace
-    def visitTwoDigitOrdinal(self, ctx:FriendlyDateParser.TwoDigitOrdinalContext):
+    def visitOrdinalDigits(self, ctx:FriendlyDateParser.OrdinalDigitsContext):
         return int(ctx.ORDINAL_DIGITS().getText()[:-2])
 
     @trace
@@ -272,49 +315,58 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
 
     @trace
     def visitDayAsNumber(self, ctx:FriendlyDateParser.DayAsNumberContext):
-        return self._promote_tdn(ctx, 'day')
+        return {'day': self.visitNumber12(ctx.number12())}
 
     @trace
     def visitZNumber(self, ctx:FriendlyDateParser.ZNumberContext):
-        v = self.visitAnyDigitNumber(ctx.anyDigitNumber())
-        logging.debug(f"ZNumber: {v}")
-        return -v if ctx.MINUS() else v
+        v = self.visitNumber(ctx.number())
+        # logging.debug(f"ZNumber: {v}")
+        return -v if ctx.DASH() else v
 
     @trace
-    def visitAnyDigitNumber(self, ctx:FriendlyDateParser.AnyDigitNumberContext):
-        return int(ctx.getText())
+    def visitNumber1(self, ctx:FriendlyDateParser.Number1Context):
+        return int(ctx.ONE_DIGIT_NUMBER().getText())
 
     @trace
-    def visitTwoDigitNumber(self, ctx:FriendlyDateParser.TwoDigitNumberContext):
+    def visitNumber2(self, ctx:FriendlyDateParser.Number2Context):
         return int(ctx.TWO_DIGIT_NUMBER().getText())
 
     @trace
-    def visitFourDigitNumber(self, ctx:FriendlyDateParser.FourDigitNumberContext):
+    def visitNumber3(self, ctx:FriendlyDateParser.Number3Context):
+        return int(ctx.THREE_DIGIT_NUMBER().getText())
+
+    @trace
+    def visitNumber4(self, ctx:FriendlyDateParser.Number4Context):
         return int(ctx.FOUR_DIGIT_NUMBER().getText())
 
     @trace
+    def visitNumber(self, ctx:FriendlyDateParser.NumberContext):
+        return int(ctx.getText())
+
+    @trace
     def visitQNumber(self, ctx:FriendlyDateParser.QNumberContext):
-        a, b = self.visitAnyFloatNumber(ctx.anyFloatNumber())
-        if ctx.MINUS():
+        a, b = self.visitFloat(ctx.float_())
+        if ctx.DASH():
             return (-a, -b)
         return (a, b)
 
-    @trace
-    def visitAnyFloatNumber(self, ctx:FriendlyDateParser.AnyFloatNumberContext):
-        if (c := ctx.anyDigitNumber()):
-            return self.visitAnyDigitNumber(c), 0
-        c = ctx.ANY_DIGIT_FLOAT_NUMBER() or ctx.TWO_DIGIT_FLOAT_NUMBER()
-        a, b = c.getText().split('.')
+    def _split_float(self, txt):
+        a, *more = txt.split('.')
+        b = more[0] if more else "0"
         b += "000000"
         return int(a), int(b[:6])
 
     @trace
-    def visitTwoDigitFloatNumber(self, ctx:FriendlyDateParser.TwoDigitFloatNumberContext):
-        if (c := ctx.TWO_DIGIT_NUMBER()):
-            return (int(c.getText()), 0)
-        (a, b) = ctx.TWO_DIGIT_FLOAT_NUMBER().getText().split('.')
-        b += "000000"
-        return (int(a), int(b[:6]))
+    def visitFloat2(self, ctx:FriendlyDateParser.Float2Context):
+        return self._split_float(ctx.getText())
+
+    @trace
+    def visitFloat12(self, ctx:FriendlyDateParser.Float12Context):
+        return self._split_float(ctx.getText())
+
+    @trace
+    def visitFloat(self, ctx:FriendlyDateParser.FloatContext):
+        return self._split_float(ctx.getText())
 
     @trace
     def visitBefore(self, ctx:FriendlyDateParser.BeforeContext):
@@ -413,9 +465,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
     @trace
     def visitThisR(self, ctx:FriendlyDateParser.ThisRContext):
         return {'modifier': 'this'}
-
-    def _promote_tdn(self, ctx, slot):
-        return {slot: self.visitTwoDigitNumber(ctx.twoDigitNumber())}
 
     def _make_time(self, r):
         hour = r.get('hour', 0)

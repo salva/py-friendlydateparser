@@ -84,52 +84,47 @@ formats, including explicit and relative formats.
 The module can parse a wide variety of date and time formats,
 including but not limited to:
 
-- **Relative Dates**: Expressions like "the first of next month",
-  "next week", "last Friday", "the day after tomorrow" are supported,
-  allowing flexible parsing of commonly used phrases.
+- **Explicit Dates**: Formats such as `3-october-2017`, `10/3/2017`,
+  `2017/12/3`, `march 15, 2017`, `15/july/2023` are accepted, with the
+  ability to handle both `mm/dd/yyyy` and `dd/mm/yyyy` formats based
+  on the `month_first` parameter.
 
-- **Explicit Dates**: Formats such as "10/3/2017", "march 15, 2017",
-  "15/july/2023" are accepted, with the ability to handle both
-  `mm/dd/yyyy` and `dd/mm/yyyy` formats based on the `month_first`
-  parameter.
+- **Incomplete dates**: `1 october`, `10/3`, `feb 2020`, `2024`,
+  `nov`. The current year is used to fill the missing data by the
+  right and "ones" or "zeros" by the left. For instance, `feb 2020`
+  becomes the 1st of febrery of 2020 at 00:00:00, `october` becomes
+  the 1st of october of the current year at 00:00:00. Note that very
+  ambiguous expressions as `9` are just rejected.
 
-- **Relative Weekdays**: Phrases like "monday next week", "last
-  monday", "second sunday of 2023" are parsed, allowing users to
-  reference specific weekdays in relative terms.
+- **Relative Dates**: `the first of next month`, `next week`, `the day
+  after tomorrow`, `october 1 last year`.
 
-- **Datetime Formats**: Full date and time expressions such as
-  "january 1, 2017 at 14:30", "february 14, 2017 at 2:45 PM" are
-  supported, making it easy to parse datetime values from text.
+- **Relative Weekdays**: Phrases like `monday next week`, `last
+  monday`, `second sunday of 2023`, `last friday of october`.
 
-- **Special Terms**: Terms like "midnight", "noon" are also supported,
-  allowing parsing of common time-related expressions.
+- **Year and month week numbers**: `wed week 20 2018`, `week 2 october
+  2017`, `last week october`.
 
-- **Implicit Dates**: Natural expressions like "tomorrow at 5 PM",
-  "next Monday", or "this month" are parsed effectively to
-  provide accurate datetime objects.
+- **Time and Timezones**: `today at 12pm`, `last monday 12h40m`,
+  `10/2/2022 40:30:12.1 CEST`, `tomorrow at midnight Europe/Paris`.
 
-- **Week Numbers**: References like "week 42 of 2023" can be parsed,
-  providing an easy way to handle week-based scheduling.
-
-- **Ordinal Dates**: Phrases like "the third of next month" or "the
-  first Sunday in June" are supported, allowing flexibility with
-  ordinal references.
+- **Before and after**: `3 weeks before yesterday`, `1d 4h after next
+  monday at noon`, `1 month ago`. Time units can be abbreviated, for
+  instance, both `days`, `day`, `ds` and `d` are accepted as days. On
+  the other hand months can only be given as `month` or `months` as
+  `m` and `ms` mean minutes.
 
 The module supports both common formats like `mm/dd/yyyy` and
 `dd/mm/yyyy`, with the ability to distinguish based on the
 `month_first` parameter.
 
-Note: If you think a new format should be supported, feel free to ask
-for it, and I will try to add it in a future update.
+**Note: If you think a new format should be supported, just ask for
+it!**
 
 ## Error Handling
 
 - If the input text is incomplete or not recognizable as a valid
   date/time, a `ValueError` may be raised.
-
-- The module tries to handle incomplete dates (for instance, "october"
-  is equivalent to "the first of october of this year"), but very
-  ambiguous cases as "9" are just rejected.
 
 ## Example Usage
 

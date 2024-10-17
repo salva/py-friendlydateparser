@@ -5,15 +5,19 @@ import Timezone;
 friendlyDateTime : dateTime EOF ;
 
 dateTime
-    : (dateTimeDelta (BEFORE|AFTER))? (date (AT? time)? anyTz? | now)
+    : (dateTimeDelta (BEFORE|AFTER))?
+        (date (AT? time)? anyTz?
+        | iso8601DateTime
+        | now )
     | dateTimeDelta ago
     ;
 
 now : NOW ;
 
-anyTz : tz | tzAbbreviation ;
+anyTz : tz | tzAbbreviation | tzOffset;
 tz : TIMEZONE ;
 tzAbbreviation: TIMEZONE_ABBREVIATION ;
+tzOffset : (DASH | PLUS) hour12 (COLON? minute2)? ;
 
 friendlyDate : dateAlone EOF ;
 
@@ -48,7 +52,7 @@ dateTimeDelta
 
 yearsDelta : zNumber (YEAR | YEARS) ;
 monthsDelta : zNumber (MONTH | MONTHS) ;
-weeksDelta : zNumber (WEEK | WEEKS) ;
+weeksDelta : zNumber (W | WEEK | WEEKS) ;
 daysDelta : zNumber (DAY | DAYS) ;
 
 hoursDelta : zNumber HOURS ;
@@ -56,25 +60,23 @@ minutesDelta : zNumber MINUTES ;
 secondsDelta : qNumber (SECOND | SECONDS) ;
 
 timeAbsolute
-    : hour COLON minute (COLON second)? amPm?
-    | hour HOURS ( minute MINUTES (second (SECONDS|SECOND))? )? amPm?
+    : hour12 COLON minute2 (COLON second2)? amPm?
+    | hour12 HOURS ( minute12 MINUTES (second12 (SECONDS|SECOND))? )? amPm?
     ;
 
-hour : twoDigitNumber ;
+hour12 : number12 ;
+minute12 : number12 ;
+second12: float12 ;
 
-minute : twoDigitNumber ;
-
-second : twoDigitFloatNumber ;
-
-twoDigitFloatNumber : TWO_DIGIT_NUMBER | TWO_DIGIT_FLOAT_NUMBER ;
+hour2 : number2 ;
+minute2 : number2 ;
+second2 : float2 ;
 
 amPm : am | pm ;
-
 am: AM;
-
 pm: PM;
 
-date : dateRelativeByDate | dateAbsolute ;
+date : dateRelativeByDate | dateAbsolute | iso8601Date;
 
 dateRelativeByDate : dateRelative (BY date)? ;
 
@@ -158,21 +160,43 @@ dateAbsolute
     | dateLongNumber
     ;
 
+iso8601DateTime : iso8601Date T iso8601Time iso8601Tz ;
+
+iso8601Time : hour2 COLON minute2 (COLON second2)? ;
+
+iso8601Tz : Z | tzOffset ;
+
+iso8601Date
+    : iso8601DateStandard
+    | iso8601DateWeek
+    | iso8601DateDay
+    ;
+
+iso8601DateStandard : year4 DASH monthAsNumber DASH dayAsNumber ;
+iso8601DateWeek : year4 DASH W iso8601YearWeek DASH iso8601WeekDay ;
+iso8601DateDay : year4 DASH iso8601YearDay ;
+
+iso8601Month : number2 ;
+iso8601MonthDay : number2 ;
+iso8601YearWeek : number2 ;
+iso8601WeekDay : number1 ;
+iso8601YearDay : number3 ;
+
 dateMonthAsName
-    : (weekDay COMMA?)? dayAsNumber separator? monthAsName (separator? yearLong)?
-    | (weekDay COMMA?)? monthAsName separator dayAsNumber (separator yearLong)?
-    | yearLong separator monthAsName separator dayAsNumber
-    | THE? (dayAsOrdinal | lastDay) OF monthAsName ((COMMA|OF)? yearLong)?
-    | monthAsName dayAsNumberOrOrdinal  (','? yearLong)?
-    | monthAsName (separator? yearLong)?
+    : (weekDay COMMA?)? dayAsNumber separator? monthAsName (separator? year4)?
+    | (weekDay COMMA?)? monthAsName separator dayAsNumber (separator year4)?
+    | year4 separator monthAsName separator dayAsNumber
+    | THE? (dayAsOrdinal | lastDay) OF monthAsName ((COMMA|OF)? year4)?
+    | monthAsName dayAsNumberOrOrdinal  (','? year4)?
+    | monthAsName (separator? year4)?
     ;
 
 lastDay : LAST DAY;
 
 dateMonthAsNumber
-    : (weekDay COMMA?)? twoDigitNumberLeft separator twoDigitNumberRight (separator yearLong)?
-    | yearLong separator monthAsNumber separator dayAsNumber
-    | monthAsNumber separator yearLong
+    : (weekDay COMMA?)? number12Left separator number12Right (separator year4)?
+    | year4 separator monthAsNumber separator dayAsNumber
+    | monthAsNumber separator year4
     ;
 
 dateWithWeek
@@ -180,16 +204,16 @@ dateWithWeek
         ( weekDay OF? )?
         ( weekNumber
             (OF?
-                ( monthAsNameOrNumber separator yearLong
-                | monthAsName (OF? yearLong)?
-                | yearLong
+                ( monthAsNameOrNumber separator year4
+                | monthAsName (OF? year4)?
+                | year4
                 )
             )?
         | lastWeek
             (OF?
-                ( monthAsNameOrNumber separator yearLong
-                | monthAsName (OF? yearLong)?
-                | yearLong
+                ( monthAsNameOrNumber separator year4
+                | monthAsName (OF? year4)?
+                | year4
                 )
             )
         )
@@ -199,9 +223,9 @@ dateWithDayPosition
     : THE?
         (weekDayPositionOrdinal | weekDayPositionLast | dayPositionNumber)
         (OF?
-            ( monthAsNameOrNumber separator yearLong
-            | monthAsName (OF? yearLong)?
-            | yearLong
+            ( monthAsNameOrNumber separator year4
+            | monthAsName (OF? year4)?
+            | year4
             )
         )
     ;
@@ -210,21 +234,21 @@ weekDayPositionOrdinal : dayPositionOrdinal (DAY | weekDay) ;
 
 weekDayPositionLast : LAST weekDay ;
 
-dayPositionNumber : DAY anyDigitNumber ;
+dayPositionNumber : DAY number ;
 
 dayPositionOrdinal : anyOrdinal ;
 
 lastWeek: LAST WEEK;
 
-weekNumber : WEEK twoDigitNumber ;
+weekNumber : WEEK number12 ;
 
-twoDigitNumberLeft : twoDigitNumber ;
+number12Left : number12 ;
 
-twoDigitNumberRight : twoDigitNumber ;
+number12Right : number12 ;
 
 dateLongNumber : EIGHT_DIGIT_NUMBER ;
 
-dateYear : (THE? lastDay OF)? yearLong;
+dateYear : (THE? lastDay OF)? year4;
 
 monthAsNameOrNumber : monthAsNumber | monthAsName ;
 
@@ -243,36 +267,6 @@ monthAsName returns [value]
     | DEC {$value = 12;}
     ;
 
-dayAsNumberOrOrdinal : dayAsNumber | dayAsOrdinal ;
-
-dayAsOrdinal : anyOrdinal ;
-
-anyOrdinal : twoDigitOrdinal | wordOrdinal ;
-
-twoDigitOrdinal : ORDINAL_DIGITS ;
-
-wordOrdinal : ORDINAL_WORDS | SECOND;
-
-monthAsNumber : twoDigitNumber ;
-
-dayAsNumber : twoDigitNumber ;
-
-yearLong : fourDigitNumber ;
-
-fourDigitNumber : FOUR_DIGIT_NUMBER ;
-
-twoDigitNumber : TWO_DIGIT_NUMBER ;
-
-zNumber : (MINUS|PLUS)? anyDigitNumber ;
-
-qNumber : (MINUS|PLUS)? anyFloatNumber ;
-
-anyFloatNumber : TWO_DIGIT_FLOAT_NUMBER | ANY_DIGIT_FLOAT_NUMBER | anyDigitNumber;
-
-anyDigitNumber : TWO_DIGIT_NUMBER | FOUR_DIGIT_NUMBER | EIGHT_DIGIT_NUMBER | ANY_DIGIT_NUMBER ;
-
-// threeDigitNumber : TWO_DIGIT_NUMBER | THREE_DIGIT_NUMBER ;
-
 weekDay returns [value]
     : MON {$value = 0;}
     | TUE {$value = 1;}
@@ -283,21 +277,62 @@ weekDay returns [value]
     | SUN {$value = 6;}
     ;
 
-separator : MINUS | SLASH;
+separator : DASH | SLASH;
+
+dayAsNumberOrOrdinal : dayAsNumber | dayAsOrdinal ;
+
+dayAsOrdinal : anyOrdinal ;
+
+anyOrdinal : ordinalDigits | wordOrdinal ;
+
+ordinalDigits : ORDINAL_DIGITS ;
+
+wordOrdinal : ORDINAL_WORDS | SECOND;
+
+monthAsNumber : number12 ;
+
+dayAsNumber : number12 ;
+
+year4 : number4 ;
+
+
+number1 : ONE_DIGIT_NUMBER ;
+number2 : TWO_DIGIT_NUMBER ;
+number12 : number1 | number2 ;
+number3 : THREE_DIGIT_NUMBER ;
+number4 : FOUR_DIGIT_NUMBER ;
+number : ONE_DIGIT_NUMBER | TWO_DIGIT_NUMBER | THREE_DIGIT_NUMBER | FOUR_DIGIT_NUMBER | EIGHT_DIGIT_NUMBER | ANY_DIGIT_NUMBER ;
+
+
+float1 : ONE_DIGIT_FLOAT_NUMBER | ONE_DIGIT_FLOAT_NUMBER ;
+float2 : TWO_DIGIT_FLOAT_NUMBER | TWO_DIGIT_NUMBER ;
+float12 : float1 | float2 ;
+float : ONE_DIGIT_FLOAT_NUMBER | TWO_DIGIT_FLOAT_NUMBER | ANY_DIGIT_FLOAT_NUMBER | number;
+
+
+zNumber : (DASH|PLUS)? number;
+qNumber : (DASH|PLUS)? float;
+
 
 fragment DIGIT : [0-9] ;
 
-TWO_DIGIT_FLOAT_NUMBER : DIGIT? DIGIT '.' DIGIT* ;
+ONE_DIGIT_NUMBER : DIGIT ;
 
-ANY_DIGIT_FLOAT_NUMBER : DIGIT+ '.' DIGIT* ;
+TWO_DIGIT_NUMBER : DIGIT DIGIT ;
 
-TWO_DIGIT_NUMBER : DIGIT DIGIT? ;
+THREE_DIGIT_NUMBER : DIGIT DIGIT DIGIT ;
 
-FOUR_DIGIT_NUMBER : [0-9] [0-9] [0-9] [0-9] ;
+FOUR_DIGIT_NUMBER : DIGIT DIGIT DIGIT DIGIT ;
 
 EIGHT_DIGIT_NUMBER : [0-9] [0-9] [0-9] [0-9] ( '0' [1-9] | '1' [0-2] ) ( '0' [1-9] | [1-2] [0-9] | '3' [0-1] ) ;
 
 ANY_DIGIT_NUMBER : DIGIT+ ;
+
+ONE_DIGIT_FLOAT_NUMBER : DIGIT '.' DIGIT* ;
+
+TWO_DIGIT_FLOAT_NUMBER : DIGIT DIGIT '.' DIGIT* ;
+
+ANY_DIGIT_FLOAT_NUMBER : DIGIT+ '.' DIGIT* ;
 
 JAN : 'jan' ('uary')? ;
 FEB : 'feb' ('ruary')? ;
@@ -366,10 +401,13 @@ WEEK : 'week';
 MONTH : 'month';
 YEAR : 'year';
 
+W : 'w';
+T : 't';
+Z : 'z';
 
 YEARS : 'y' | 'ys' | 'years' ;
 MONTHS : 'mo' | 'mos'| 'months' ;
-WEEKS : 'w' | 'ws' | 'weeks' ;
+WEEKS : 'ws' | 'weeks' ;
 DAYS : 'd' | 'ds' | 'days' ;
 
 ORDINAL_DIGITS
@@ -393,7 +431,7 @@ ORDINAL_WORDS
     ;
 
 PLUS : '+';
-MINUS : '-';
+DASH : '-';
 SLASH : '/';
 
 WS : [ \t\r\n]+ -> skip ;
