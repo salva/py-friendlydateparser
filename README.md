@@ -114,6 +114,9 @@ including but not limited to:
   the other hand months can only be given as `month` or `months` as
   `m` and `ms` mean minutes.
 
+- **ISO8601**: `2024-12-31T13:01+02:00`, `2024-W01-8T10:12Z`,
+  `2008-365`.
+
 The module supports both common formats like `mm/dd/yyyy` and
 `dd/mm/yyyy`, with the ability to distinguish based on the
 `month_first` parameter.
