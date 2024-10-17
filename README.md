@@ -1,10 +1,17 @@
 # friendlydateparser
 
-This Python module provides three key methods for parsing text into
-time, date, or datetime objects.
+This Python module provides methods for parsing text into date, and
+datetime objects.
 
-The aim is to be able to accept natural language date expressions
-that, even if complex, are frequently used in everyday life.
+For instance, it can parse expressions like:
+
+    tuesday, october 15, 2024 14:45 Europe/Paris
+    2 days before the last day of next month
+    1h15m after next sunday at midnight CEST
+    the second monday of 2012
+
+The aim is to be able to accept expressions witch, even if complex,
+express date references which are common in everyday life.
 
 ## API
 
