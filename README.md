@@ -56,7 +56,7 @@ dates (e.g., "10/3/2017", "15th of July").
   # Assuming today is 2023-10-10, returns: datetime.date(2023, 11, 1)
   ```
 
-### `parse_datetime(text, now=None, month_first=True)`
+### `parse_datetime(text, now=None, month_first=True, default_tz)`
 
 Parses both date and time information from a given string and returns
 a datetime object. The function handles a wide range of date and time
@@ -70,6 +70,11 @@ formats, including explicit and relative formats.
   - `month_first` (bool, optional): Indicates whether the month
       appears first in numerical dates (e.g., `10/3` is treated as
       October 3rd if `month_first=True`). Defaults to `True`.
+  - `default_tz`: default timezone when the given string doesn't
+    specify one. Defaults to None which causes the function to return a
+    [naive](https://docs.python.org/3/library/datetime.html#aware-and-naive-objects)
+    datetime object when a TZ does not appear explicitly in the given
+    text.
 
 - **Returns**: A `datetime.datetime` object.
 
@@ -79,10 +84,10 @@ formats, including explicit and relative formats.
   # Returns: datetime.datetime(2017, 1, 1, 14, 30)
   ```
 
+
 ## Supported Formats
 
-The module can parse a wide variety of date and time formats,
-including but not limited to:
+The module can parse a wide variety of date and time formats, such as:
 
 - **Explicit Dates**: Formats such as `3-october-2017`, `10/3/2017`,
   `2017/12/3`, `march 15, 2017`, `15/july/2023` are accepted, with the
@@ -90,11 +95,13 @@ including but not limited to:
   on the `month_first` parameter.
 
 - **Incomplete dates**: `1 october`, `10/3`, `feb 2020`, `2024`,
-  `nov`. The current year is used to fill the missing data by the
-  right and "ones" or "zeros" by the left. For instance, `feb 2020`
-  becomes the 1st of febrery of 2020 at 00:00:00, `october` becomes
-  the 1st of october of the current year at 00:00:00. Note that very
-  ambiguous expressions as `9` are just rejected.
+  `nov`. The current year is used to fill in missing information on
+  the right, while missing values on the left are filled with "ones"
+  or "zeros" as appropriate. For instance, `feb 2020` becomes the 1st
+  of February of 2020 at 00:00:00, `october` becomes the 1st of
+  October of the current year at 00:00:00.
+
+  Note that very ambiguous expressions like `9` are just rejected.
 
 - **Relative Dates**: `the first of next month`, `next week`, `the day
   after tomorrow`, `october 1 last year`.
@@ -108,18 +115,47 @@ including but not limited to:
 - **Time and Timezones**: `today at 12pm`, `last monday 12h40m`,
   `10/2/2022 40:30:12.1 CEST`, `tomorrow at midnight Europe/Paris`.
 
-- **Before and after**: `3 weeks before yesterday`, `1d 4h after next
-  monday at noon`, `1 month ago`. Time units can be abbreviated, for
-  instance, both `days`, `day`, `ds` and `d` are accepted as days. On
-  the other hand months can only be given as `month` or `months` as
-  `m` and `ms` mean minutes.
+- **Deltas (before and after)**: `3 weeks before yesterday`, `1d 4h
+  after next monday at noon`, `1 month ago`. Time units can be
+  abbreviated, for instance, both `days`, `day`, `ds` and `d` are
+  accepted as days. On the other hand months can only be given as
+  `month` or `months` as `m` and `ms` mean minutes.
 
-- **ISO8601**: `2024-12-31T13:01+02:00`, `2024-W01-8T10:12Z`,
-  `2008-365`.
+  Negative numbers are also accepted: `3 weeks -1 day before today`.
 
-The module supports both common formats like `mm/dd/yyyy` and
-`dd/mm/yyyy`, with the ability to distinguish based on the
-`month_first` parameter.
+- **Relative references (by)**: in some cases it is useful to
+  reference some relative date from another date. For instance, a
+  common case is when you want to express an idea like "the last
+  Monday including today if today is Monday". We can express that with
+  by as `last monday by tomorrow`. Other examples are `this month by
+  sunday`, `monday by the first of next month`.
+
+- [**ISO8601**](https://en.wikipedia.org/wiki/ISO_8601):
+  `2024-12-31T13:01+02:00`, `2024-W01-8T10:12Z`, `2008-365`.
+
+And some extra considerations:
+
+- The only inflexible rule when parsing is the order of the
+  components, which must follow *(delta, date, time, timezone)*.
+
+- Besides that, the module tries to parse anything which makes sense
+  without being ambiguous.
+
+- Common particles such as `the`, `of`, commas, dashes,
+  slashes, etc. can be included when they are common but also usually
+  excluded. For instance, `october the second of 2015`, `october the
+  second, 2015`, `october 2nd 2015` are all parsed correctly.
+
+- Space can be included freely everywhere except between the digits of
+  a number: `1d-1h before october/23`, `1 d - 1 h before october /
+  23`.
+
+- Abbreviations for weekdays, month names and units are accepted as
+  long as they are unambiguous.
+
+- Ordinals can be written as numbers with the appropriate suffix (1st,
+  25th, etc.). Ordinals from 1st to 99th can also be written as words.
+
 
 **Note: If you think a new format should be supported, just ask for
 it!**
@@ -132,15 +168,11 @@ it!**
 ## Example Usage
 
 ```python
-from friendlydateparser import parse_date, parse_time, parse_datetime
+from friendlydateparser import parse_date, parse_datetime
 
 # Parsing a date
 date_obj = parse_date("the last day of next jan")
 # Returns: datetime.date(2024, 1, 31)
-
-# Parsing a time
-time_obj = parse_time("2:00 PM")
-# Returns: datetime.time(14, 0)
 
 # Parsing a datetime
 datetime_obj = parse_datetime("march 15, 2017 11:59 PM")
