@@ -56,7 +56,7 @@ dates (e.g., "10/3/2017", "15th of July").
   # Assuming today is 2023-10-10, returns: datetime.date(2023, 11, 1)
   ```
 
-### `parse_datetime(text, now=None, month_first=True, default_tz)`
+### `parse_datetime(text, now=None, month_first=True, default_tz=None)`
 
 Parses both date and time information from a given string and returns
 a datetime object. The function handles a wide range of date and time
