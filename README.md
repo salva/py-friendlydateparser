@@ -146,9 +146,14 @@ And some extra considerations:
   excluded. For instance, `october the second of 2015`, `october the
   second, 2015`, `october 2nd 2015` are all parsed correctly.
 
-- Space can be included freely everywhere except between the digits of
-  a number: `1d-1h before october/23`, `1 d - 1 h before october /
-  23`.
+- Space can be included freely everywhere except:
+  - Between the digits of a number.
+  - In ordinal numbers composed by several words, dashes must be
+    used to join them as in `twenty-third`.
+  - In timezone names (`Europe/Paris`).
+
+  For instance, valid expressions are `1d-1h before october/23`, `1
+  d - 1 h before october / 23`.
 
 - Abbreviations for weekdays, month names and units are accepted as
   long as they are unambiguous.
