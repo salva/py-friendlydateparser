@@ -15,23 +15,6 @@ express date references which are common in everyday life.
 
 ## API
 
-### `parse_time(text)`
-
-Extracts time information from a given string and returns a time
-object. This function is suitable for parsing times like "2:45 PM",
-"14:30", "midnight", etc.
-
-- **Parameters**:
-  - `text` (str): The text containing time information to be parsed.
-
-- **Returns**: A `datetime.time` object.
-
-- **Example**:
-  ```python
-  time_obj = parse_time("2:45 PM")
-  # Returns: datetime.time(14, 45)
-  ```
-
 ### `parse_date(text, now=None, month_first=True)`
 
 Parses date information from a given string and returns a date
