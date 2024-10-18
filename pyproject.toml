@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "friendlydateparser"
-version = "0.2.3"
+version = "0.2.4"
 description = "A flexible date parsing library that can handle complex natural language expressions, making date manipulation easy and intuitive."
 readme = "README.md"
 authors = [ { name = "Salvador Fandiño García", email = "sfandino@yahoo.com" } ]
