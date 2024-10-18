@@ -102,6 +102,10 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return self.visitChildren(ctx)['datetime']
 
     @trace
+    def visitFriendlyTimezone(self, ctx:FriendlyDateParser.FriendlyTimezoneContext):
+        return self.visitChildren(ctx)['tz']
+
+    @trace
     def visitNow(self, ctx:FriendlyDateParser.NowContext):
         return {'datetime': self._now}
 
@@ -169,6 +173,10 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         if ctx.DASH():
             offset = -offset
         return {'tz': pytz.FixedOffset(offset)}
+
+    @trace
+    def visitTzZ(self, ctx:FriendlyDateParser.TzZContext):
+        return {'tz': pytz.UTC}
 
     @trace
     def visitLastDay(self, ctx:FriendlyDateParser.LastDayContext):
@@ -638,13 +646,13 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
                 d += delta
 
         if (tz := r.get('tz')) is not None:
+            assert d.tzinfo is None, "Internal error: datetime already has a timezone"
             d = tz.localize(d)
-        elif (tz := self._default_tz) is not None:
-            if isinstance(tz, str):
-                tz = pytz.timezone(tz)
-            d = tz.localize(d)
+        elif d.tzinfo is None:
+             if (tz := self._default_tz) is not None:
+                 d = tz.localize(d)
 
-        logging.debug(f"make_datetime: {d} ({type(d)})")
+        logging.debug(f"make_datetime: {d}, tzinfo: {d.tzinfo}, type: {type(d)}")
         return d
 
     def _make_date_relative(self, r):

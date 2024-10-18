@@ -21,6 +21,8 @@ tzOffset : (DASH | PLUS) hour12 (COLON? minute2)? ;
 
 friendlyDate : dateAlone EOF ;
 
+friendlyTimezone : (tzZ | anyTz) ;
+
 dateAlone
     : (dateDelta (before|after))? date
     | dateDelta ago
@@ -164,7 +166,9 @@ iso8601DateTime : iso8601Date T iso8601Time iso8601Tz ;
 
 iso8601Time : hour2 COLON minute2 (COLON second2)? ;
 
-iso8601Tz : Z | tzOffset ;
+iso8601Tz : tzZ | tzOffset ;
+
+tzZ : Z ;
 
 iso8601Date
     : iso8601DateStandard

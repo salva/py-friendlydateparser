@@ -13,11 +13,11 @@ from friendlydateparser.antlr.FriendlyDateVisitorPy import FriendlyDateVisitorPy
 from datetime import datetime, date
 import logging
 
-def _resolve_now(now):
+def _resolve_now(now, default_tz):
     if now is None:
         return datetime.now()
     if isinstance(now, str):
-        return parse_datetime(now)
+        return parse_datetime(now, default_tz=default_tz)
     if isinstance(now, datetime):
         return now
     if isinstance(now, date):
@@ -33,11 +33,17 @@ def _resolve_month_first(month_first):
         return date_format.startswith('%m')
     return month_first
 
+def _resolve_tz(tz):
+    if tz is None:
+        return None
+    if isinstance(tz, str):
+        return parse_timezone(tz)
+    return tz
+
 def _parse_anything(text, what, now=None, month_first=True, default_tz=None):
-
-    now = _resolve_now(now)
+    default_tz = _resolve_tz(default_tz)
+    now = _resolve_now(now, default_tz)
     month_first = _resolve_month_first(month_first)
-
     input_stream = InputStream(text.lower())
     lexer = FriendlyDateLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
@@ -50,6 +56,8 @@ def _parse_anything(text, what, now=None, month_first=True, default_tz=None):
         tree = parser.friendlyDate()
     elif what == "datetime":
         tree = parser.friendlyDateTime()
+    elif what == "timezone":
+        tree = parser.friendlyTimezone()
     else:
         raise ValueError(f"Invalid value for 'what' parameter: {what}")
 
@@ -64,6 +72,9 @@ def parse_date(text, now=None, month_first=True):
 
 def parse_datetime(text, now=None, month_first=True, default_tz=None):
     return _parse_anything(text, "datetime", now=now, month_first=month_first, default_tz=default_tz)
+
+def parse_timezone(text):
+    return _parse_anything(text, "timezone")
 
 class _ErrorListener(ErrorListener):
     def __init__(self):
