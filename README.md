@@ -148,12 +148,15 @@ And some extra considerations:
 
 - Space can be included freely everywhere except:
   - Between the digits of a number.
-  - In ordinal numbers composed by several words, dashes must be
-    used to join them as in `twenty-third`.
+  - In ordinal numbers composed by several words (dashes must be
+    used to join them as in `twenty-third`).
   - In timezone names (`Europe/Paris`).
 
   For instance, valid expressions are `1d-1h before october/23`, `1
   d - 1 h before october / 23`.
+
+  On the other hand, space is required between consecutive words. For
+  instance, `fridaynextweek` is not a valid expression.
 
 - Abbreviations for weekdays, month names and units are accepted as
   long as they are unambiguous.

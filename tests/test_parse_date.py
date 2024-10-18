@@ -118,6 +118,7 @@ dates = [
     ("2023-W23-6", "2023-06-10", "OK"),
     ("2024-041", "2024-02-10", "OK"),
     ("2024 - 041", "2024-02-10", "OK"),
+    ("lastmonday oct 2024", ValueError, "OK"), # we don't want to accept words without spaces
 ]
 
 @pytest.mark.parametrize("input_text, expected, tag", dates)
