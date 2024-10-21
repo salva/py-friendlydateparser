@@ -10,7 +10,7 @@ import os
 
 from friendlydateparser.tz_abbreviations import tz_abbreviations
 
-traceme = True or os.environ.get("FRIENDLYDATEPARSER_TRACE", "0") == "1"
+traceme = os.environ.get("FRIENDLYDATEPARSER_TRACE", "0") == "1"
 
 ordinals = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth',
              'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth',
@@ -87,11 +87,7 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
 
     @trace
     def visit(self, ctx):
-        try:
-            return super().visit(ctx)
-        except Exception as e:
-            logging.exception(e)
-            raise ValueError(f"Error parsing {ctx.toStringTree(recog=ctx.parser)}") from e
+        return super().visit(ctx)
 
     @trace
     def visitFriendlyDate(self, ctx:FriendlyDateParser.FriendlyDateContext):
@@ -328,7 +324,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
     @trace
     def visitZNumber(self, ctx:FriendlyDateParser.ZNumberContext):
         v = self.visitNumber(ctx.number())
-        # logging.debug(f"ZNumber: {v}")
         return -v if ctx.DASH() else v
 
     @trace
@@ -573,7 +568,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return monday + timedelta(days=weekday)
 
     def _make_date_absolute_by_day_position(self, r):
-        logging.warning(f"make_date_absolute_by_day_position {r}")
         day_position = r['day_position']
         weekday = r.get('weekday', None)
         year = r.get('year', self._now.year)
@@ -612,28 +606,21 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
               'hours': 0, 'minutes': 0, 'seconds': 0, 'microseconds': 0 }
         for d in l:
             for k, v in d.items():
-                logging.debug(f"Adding on {k}: {r[k]} + {v}")
                 r[k] += v
         return relativedelta(**r)
 
     def _make_date_alone(self, r):
-        logging.debug(f"make_date_alone: {r}")
         d = r.get('date', self._now.date())
         if (delta := r.get('date_delta')) is None:
             return d
 
         if r.get('delta_before', False):
-            logging.debug(f"Subtracting {delta} from {d}")
             d -= delta
         else:
-            logging.debug(f"Subtracting {delta} from {d}")
             d += delta
-
-        logging.debug(f"make_date_alone --> {d} ({type(d)})")
         return d
 
     def _make_datetime(self, r):
-        logging.debug(f"make_datetime: {r}")
         if (d := r.get('date')) is None:
             d = self._now
         else:
@@ -651,8 +638,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         elif d.tzinfo is None:
              if (tz := self._default_tz) is not None:
                  d = tz.localize(d)
-
-        logging.debug(f"make_datetime: {d}, tzinfo: {d.tzinfo}, type: {type(d)}")
         return d
 
     def _make_date_relative(self, r):
@@ -799,7 +784,6 @@ class FriendlyDateVisitorPy(FriendlyDateVisitor):
         return self._make_date_absolute_by_day_position(r)
 
     def _make_date_relative_year_day_position(self, r, now):
-        logging.warning(r)
         if r['modifier'] == 'last':
             r['year'] = now.year - 1
         elif r['modifier'] == 'next':
